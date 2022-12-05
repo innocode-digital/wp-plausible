@@ -9,7 +9,6 @@ use Innocode\Statistics\Providers\Plausible\Entities\Timeseries;
 use Innocode\Statistics\Traits\BearerTokenTrait;
 use Innocode\Statistics\Traits\SiteIdTrait;
 use Requests;
-use WP_Error;
 
 class Stats extends AbstractEndpoint {
 
@@ -29,9 +28,15 @@ class Stats extends AbstractEndpoint {
 	 * @return string
 	 */
 	protected function url( string $path, array $data = [] ): string {
-		return parent::url( $path, wp_parse_args( $data, [
-			'site_id' => $this->site_id(),
-		] ) );
+		return parent::url(
+			$path,
+			wp_parse_args(
+				$data,
+				[
+					'site_id' => $this->site_id(),
+				]
+			)
+		);
 	}
 
 	/**
@@ -82,9 +87,12 @@ class Stats extends AbstractEndpoint {
 		$body       = wp_remote_retrieve_body( $response );
 		$timeseries = json_decode( $body, true )['results'];
 
-		return array_map( function ( array $item ) {
-			return new Timeseries( $item );
-		}, $timeseries );
+		return array_map(
+			function ( array $item ) {
+				return new Timeseries( $item );
+			},
+			$timeseries
+		);
 	}
 
 	/**
@@ -102,8 +110,11 @@ class Stats extends AbstractEndpoint {
 		$body      = wp_remote_retrieve_body( $response );
 		$breakdown = json_decode( $body, true )['results'];
 
-		return array_map( function ( array $item ) {
-			return new Breakdown( $item );
-		}, $breakdown );
+		return array_map(
+			function ( array $item ) {
+				return new Breakdown( $item );
+			},
+			$breakdown
+		);
 	}
 }

@@ -18,9 +18,9 @@ trait BearerTokenTrait {
 		$this->token = $token;
 	}
 
-    /**
-     * @return string|null
-     */
+	/**
+	 * @return string|null
+	 */
 	public function get_token(): ?string {
 		return $this->token;
 	}
@@ -29,11 +29,11 @@ trait BearerTokenTrait {
 	 * @return string
 	 */
 	public function auth(): string {
-        $token = $this->get_token();
+		$token = $this->get_token();
 
-        if ( null === $token ) {
-            return '';
-        }
+		if ( null === $token ) {
+			return '';
+		}
 
 		return "Bearer $token";
 	}

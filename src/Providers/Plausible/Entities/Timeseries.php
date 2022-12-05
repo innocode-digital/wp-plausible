@@ -3,7 +3,6 @@
 namespace Innocode\Statistics\Providers\Plausible\Entities;
 
 use Innocode\Statistics\Abstracts\AbstractEntity;
-use DateTime;
 
 class Timeseries extends AbstractEntity {
 

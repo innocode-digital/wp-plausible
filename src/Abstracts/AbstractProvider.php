@@ -21,32 +21,32 @@ abstract class AbstractProvider {
 		return $this->api;
 	}
 
-    /**
-     * @param Plugin $plugin
-     *
-     * @return void
-     */
-    public function activate( Plugin $plugin ): void {
+	/**
+	 * @param Plugin $plugin
+	 *
+	 * @return void
+	 */
+	public function activate( Plugin $plugin ): void {
 
-    }
+	}
 
-    /**
-     * @param Plugin $plugin
-     *
-     * @return void
-     */
-    public function deactivate( Plugin $plugin ): void {
+	/**
+	 * @param Plugin $plugin
+	 *
+	 * @return void
+	 */
+	public function deactivate( Plugin $plugin ): void {
 
-    }
+	}
 
-    /**
-     * @param Plugin $plugin
-     *
-     * @return void
-     */
-    public function run( Plugin $plugin ): void {
+	/**
+	 * @param Plugin $plugin
+	 *
+	 * @return void
+	 */
+	public function run( Plugin $plugin ): void {
 
-    }
+	}
 
 	/**
 	 * @param string $name

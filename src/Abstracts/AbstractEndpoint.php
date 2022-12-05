@@ -69,15 +69,18 @@ abstract class AbstractEndpoint {
 
 	/**
 	 * @param string $method
-	 * @param array $args
+	 * @param array  $args
 	 *
 	 * @return array
 	 */
 	protected function request_args( string $method, array $args = [] ): array {
-		$args = wp_parse_args( $args, [
-			'method'    => $method,
-			'sslverify' => false,
-		] );
+		$args = wp_parse_args(
+			$args,
+			[
+				'method'    => $method,
+				'sslverify' => false,
+			]
+		);
 
 		if ( ! isset( $args['headers']['Authorization'] ) ) {
 			$auth = $this->auth();
@@ -106,20 +109,20 @@ abstract class AbstractEndpoint {
 		return wp_remote_request( $this->url( $path, $data ), $this->request_args( $method, $args ) );
 	}
 
-    /**
-     * @param int   $code
-     * @param mixed $error
-     * @return WP_Error
-     */
-    protected function error( int $code, $error ): WP_Error {
-        $message = '';
+	/**
+	 * @param int   $code
+	 * @param mixed $error
+	 * @return WP_Error
+	 */
+	protected function error( int $code, $error ): WP_Error {
+		$message = '';
 
-        if ( is_string( $error ) ) {
-            $message = $error;
-        } elseif ( is_array( $error ) && isset( $error['error'] ) && is_string( $error['error'] ) ) {
-            $message = $error['error'];
-        }
+		if ( is_string( $error ) ) {
+			$message = $error;
+		} elseif ( is_array( $error ) && isset( $error['error'] ) && is_string( $error['error'] ) ) {
+			$message = $error['error'];
+		}
 
-        return new WP_Error( $code, $message );
-    }
+		return new WP_Error( $code, $message );
+	}
 }

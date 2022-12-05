@@ -60,9 +60,9 @@ class SharedLink extends AbstractEntity {
 		$this->url = $url;
 	}
 
-    /**
-     * @return string
-     */
+	/**
+	 * @return string
+	 */
 	public function get_url(): string {
 		return $this->url;
 	}

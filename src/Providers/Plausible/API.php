@@ -3,7 +3,6 @@
 namespace Innocode\Statistics\Providers\Plausible;
 
 use Innocode\Statistics\Abstracts\AbstractAPI;
-use Innocode\Statistics\Abstracts\AbstractEndpoint;
 use Innocode\Statistics\Providers\Plausible\API\Events;
 use Innocode\Statistics\Providers\Plausible\API\SiteProvisioning;
 use Innocode\Statistics\Providers\Plausible\API\Stats;
@@ -24,8 +23,8 @@ class API extends AbstractAPI {
 	protected $site_provisioning;
 
 	public function __construct() {
-		$this->stats = new Stats();
-		$this->events = new Events();
+		$this->stats             = new Stats();
+		$this->events            = new Events();
 		$this->site_provisioning = new SiteProvisioning();
 	}
 

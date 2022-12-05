@@ -13,28 +13,28 @@ class Provider extends AbstractProvider {
 		$this->api = new API();
 	}
 
-    /**
-     * @param Plugin $plugin
-     *
-     * @return void
-     */
-    public function activate( Plugin $plugin ): void {
-        $site_provisioning = $this->get_api()->get_site_provisioning();
+	/**
+	 * @param Plugin $plugin
+	 *
+	 * @return void
+	 */
+	public function activate( Plugin $plugin ): void {
+		$site_provisioning = $this->get_api()->get_site_provisioning();
 
-        if ( $site_provisioning->is_enabled() ) {
-            $site = new Site();
-            $site->set_domain( $this->site_id() );
-            $site->set_timezone( wp_timezone_string() );
+		if ( $site_provisioning->is_enabled() ) {
+			$site = new Site();
+			$site->set_domain( $this->site_id() );
+			$site->set_timezone( wp_timezone_string() );
 
-            $site = $site_provisioning->create( $site );
+			$site = $site_provisioning->create( $site );
 
-            if ( is_wp_error( $site ) ) {
-                error_log( $site->get_error_message() );
-            }
-        }
-    }
+			if ( is_wp_error( $site ) ) {
+				error_log( $site->get_error_message() );
+			}
+		}
+	}
 
-    /**
+	/**
 	 * @param string $name
 	 * @param string $url
 	 * @param array  $props

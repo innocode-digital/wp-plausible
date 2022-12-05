@@ -5,7 +5,7 @@
 
     <!-- Files or directories to check. -->
     <file>./src</file>
-    <file>./wp-statistics.php</file>
+    <file>./innstats.php</file>
 
     <!-- Path to strip from the front of file paths inside reports (displays shorter paths). -->
     <arg name="basepath" value="." />

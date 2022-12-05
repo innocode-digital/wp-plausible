@@ -9,7 +9,6 @@ use Innocode\Statistics\Providers\Plausible\Entities\Site;
 use Innocode\Statistics\Providers\Plausible\Entities\Status;
 use Innocode\Statistics\Traits\BearerTokenTrait;
 use Requests;
-use WP_Error;
 use WP_Http;
 
 class SiteProvisioning extends AbstractEndpoint {
@@ -23,12 +22,12 @@ class SiteProvisioning extends AbstractEndpoint {
 		return 'api/v1/sites';
 	}
 
-    /**
-     * @return bool
-     */
-    public function is_enabled(): bool {
-        return null !== $this->get_token();
-    }
+	/**
+	 * @return bool
+	 */
+	public function is_enabled(): bool {
+		return null !== $this->get_token();
+	}
 
 	/**
 	 * @param Site $site
@@ -36,21 +35,26 @@ class SiteProvisioning extends AbstractEndpoint {
 	 * @return Site|WP_Error
 	 */
 	public function create( Site $site ) {
-		$response = $this->request( Requests::POST, '', [], [
-			'body' => $site->to_array(),
-		] );
+		$response = $this->request(
+			Requests::POST,
+			'',
+			[],
+			[
+				'body' => $site->to_array(),
+			]
+		);
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
 
-        $code = wp_remote_retrieve_response_code( $response );
-        $body = wp_remote_retrieve_body( $response );
-        $site = json_decode( $body, true );
+		$code = wp_remote_retrieve_response_code( $response );
+		$body = wp_remote_retrieve_body( $response );
+		$site = json_decode( $body, true );
 
-        if ( $code !== WP_Http::OK ) {
-            return $this->error( $code, $site );
-        }
+		if ( $code !== WP_Http::OK ) {
+			return $this->error( $code, $site );
+		}
 
 		return new Site( $site );
 	}
@@ -67,13 +71,13 @@ class SiteProvisioning extends AbstractEndpoint {
 			return $response;
 		}
 
-        $code = wp_remote_retrieve_response_code( $response );
+		$code = wp_remote_retrieve_response_code( $response );
 		$body = wp_remote_retrieve_body( $response );
 		$site = json_decode( $body, true );
 
-        if ( $code !== WP_Http::OK ) {
-            return $this->error( $code, $site );
-        }
+		if ( $code !== WP_Http::OK ) {
+			return $this->error( $code, $site );
+		}
 
 		return new Site( $site );
 	}
@@ -90,13 +94,13 @@ class SiteProvisioning extends AbstractEndpoint {
 			return $response;
 		}
 
-        $code   = wp_remote_retrieve_response_code( $response );
+		$code   = wp_remote_retrieve_response_code( $response );
 		$body   = wp_remote_retrieve_body( $response );
 		$status = json_decode( $body, true );
 
-        if ( $code !== WP_Http::OK ) {
-            return $this->error( $code, $status );
-        }
+		if ( $code !== WP_Http::OK ) {
+			return $this->error( $code, $status );
+		}
 
 		return new Status( $status );
 	}
@@ -112,21 +116,26 @@ class SiteProvisioning extends AbstractEndpoint {
 		$shared_link->set_site_id( $site_id );
 		$shared_link->set_name( $name );
 
-		$response = $this->request( Requests::PUT, 'shared-links', [], [
-			'body' => $shared_link->to_array(),
-		] );
+		$response = $this->request(
+			Requests::PUT,
+			'shared-links',
+			[],
+			[
+				'body' => $shared_link->to_array(),
+			]
+		);
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
 
-        $code        = wp_remote_retrieve_response_code( $response );
+		$code        = wp_remote_retrieve_response_code( $response );
 		$body        = wp_remote_retrieve_body( $response );
 		$shared_link = json_decode( $body, true );
 
-        if ( $code !== WP_Http::OK ) {
-            return $this->error( $code, $shared_link );
-        }
+		if ( $code !== WP_Http::OK ) {
+			return $this->error( $code, $shared_link );
+		}
 
 		return new SharedLink( $shared_link );
 	}
@@ -137,21 +146,26 @@ class SiteProvisioning extends AbstractEndpoint {
 	 * @return Goal|WP_Error
 	 */
 	public function create_goal( Goal $goal ) {
-		$response = $this->request( Requests::PUT, 'goals', [], [
-			'body' => $goal->to_array(),
-		] );
+		$response = $this->request(
+			Requests::PUT,
+			'goals',
+			[],
+			[
+				'body' => $goal->to_array(),
+			]
+		);
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
 
-        $code = wp_remote_retrieve_response_code( $response );
+		$code = wp_remote_retrieve_response_code( $response );
 		$body = wp_remote_retrieve_body( $response );
 		$goal = json_decode( $body, true );
 
-        if ( $code !== WP_Http::OK ) {
-            return $this->error( $code, $goal );
-        }
+		if ( $code !== WP_Http::OK ) {
+			return $this->error( $code, $goal );
+		}
 
 		return new Goal( $goal );
 	}
@@ -163,23 +177,28 @@ class SiteProvisioning extends AbstractEndpoint {
 	 * @return Status|WP_Error
 	 */
 	public function delete_goal( string $site_id, int $goal_id ) {
-		$response = $this->request( Requests::DELETE, "goals/$goal_id", [], [
-			'body' => [
-				'site_id' => $site_id,
-			],
-		] );
+		$response = $this->request(
+			Requests::DELETE,
+			"goals/$goal_id",
+			[],
+			[
+				'body' => [
+					'site_id' => $site_id,
+				],
+			]
+		);
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
 
-        $code   = wp_remote_retrieve_response_code( $response );
+		$code   = wp_remote_retrieve_response_code( $response );
 		$body   = wp_remote_retrieve_body( $response );
 		$status = json_decode( $body, true );
 
-        if ( $code !== WP_Http::OK ) {
-            return $this->error( $code, $status );
-        }
+		if ( $code !== WP_Http::OK ) {
+			return $this->error( $code, $status );
+		}
 
 		return new Status( $status );
 	}

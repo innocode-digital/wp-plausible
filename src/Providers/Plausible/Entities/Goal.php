@@ -6,10 +6,10 @@ use Innocode\Statistics\Abstracts\AbstractEntity;
 
 class Goal extends AbstractEntity {
 
-    /**
-     * @var string
-     */
-    protected $site_id;
+	/**
+	 * @var string
+	 */
+	protected $site_id;
 	/**
 	 * @var string
 	 */
@@ -31,21 +31,21 @@ class Goal extends AbstractEntity {
 	 */
 	protected $page_path;
 
-    /**
-     * @param string $site_id
-     *
-     * @return void
-     */
-    public function set_site_id( string $site_id ): void {
-        $this->site_id = $site_id;
-    }
+	/**
+	 * @param string $site_id
+	 *
+	 * @return void
+	 */
+	public function set_site_id( string $site_id ): void {
+		$this->site_id = $site_id;
+	}
 
-    /**
-     * @return string
-     */
-    public function get_site_id(): string {
-        return $this->site_id;
-    }
+	/**
+	 * @return string
+	 */
+	public function get_site_id(): string {
+		return $this->site_id;
+	}
 
 	/**
 	 * @param string $domain

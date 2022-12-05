@@ -6,9 +6,9 @@ use Innocode\Statistics\Abstracts\AbstractEntity;
 
 class Status extends AbstractEntity {
 
-    /**
-     * @var bool
-     */
+	/**
+	 * @var bool
+	 */
 	protected $deleted;
 
 	/**
@@ -20,9 +20,9 @@ class Status extends AbstractEntity {
 		$this->deleted = $deleted;
 	}
 
-    /**
-     * @return bool
-     */
+	/**
+	 * @return bool
+	 */
 	public function get_deleted(): bool {
 		return $this->deleted;
 	}

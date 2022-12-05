@@ -31,9 +31,9 @@ abstract class AbstractEntity {
 	 */
 	public function __construct( array $data = [] ) {
 		foreach ( $data as $property => $value ) {
-            if ( null === $value ) {
-                continue;
-            }
+			if ( null === $value ) {
+				continue;
+			}
 
 			if ( property_exists( $this, $property ) ) {
 				$this->{"set_$property"}( $value );
@@ -50,9 +50,9 @@ abstract class AbstractEntity {
 		$data = [];
 
 		foreach ( array_keys( get_object_vars( $this ) ) as $property ) {
-            if ( ! isset( $this->$property ) ) {
-                continue;
-            }
+			if ( ! isset( $this->$property ) ) {
+				continue;
+			}
 
 			$value = $this->{"get_$property"}();
 
