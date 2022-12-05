@@ -1,0 +1,44 @@
+{
+  "name": "innstats",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:utils": "uglifyjs ./public/js/utils.js -c -m -o ./public/js/utils.min.js",
+    "build:advert": "uglifyjs ./public/js/advert.js -c -m -o ./public/js/advert.min.js",
+    "build:providers": "uglifyjs ./public/js/providers/plausible.js -c -m -o ./public/js/providers/plausible.min.js",
+    "build:main": "uglifyjs ./public/js/main.js -c -m -o ./public/js/main.min.js",
+    "build": "npm run build:utils && npm run build:advert && npm run build:providers && npm run build:main",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/innocode-digital/innstats.git"
+  },
+  "keywords": [
+    "wordpress",
+    "statistics",
+    "analytics",
+    "plugin",
+    "plausible"
+  ],
+  "author": {
+    "name": "Innocode",
+    "email": "post@innocode.no",
+    "homepage": "https://innocode.com/"
+  },
+  "contributors": [
+    {
+      "name": "Viktor Kuliebiakin",
+      "email": "kuliebiakin@gmail.com"
+    }
+  ],
+  "license": "GPL-2.0-or-later",
+  "bugs": {
+    "url": "https://github.com/innocode-digital/innstats/issues"
+  },
+  "homepage": "https://github.com/innocode-digital/innstats#readme",
+  "devDependencies": {
+    "uglify-js": "^3.17.4"
+  }
+}
