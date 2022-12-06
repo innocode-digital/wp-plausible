@@ -1,8 +1,8 @@
 {
-  "name": "innocode-digital/wp-statistics",
+  "name": "innocode-digital/innstats",
   "version": "1.0.0",
   "type": "wordpress-muplugin",
-  "description": ".",
+  "description": "Collects statistics through Plausible and shows analytics in admin panel. Also, provides API for developers to retrieve data.",
   "license": "GPL-2.0+",
   "keywords": [
     "wordpress",

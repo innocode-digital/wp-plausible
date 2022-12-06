@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Innstats
- * Description: .
+ * Description: Collects statistics through Plausible and shows analytics in admin panel. Also, provides API for developers to retrieve data.
  * Version: 1.0.0
  * Author: Innocode
  * Author URI: https://innocode.com
@@ -61,6 +61,9 @@ if ( $GLOBALS['innstats']->has_provider( Statistics\Plugin::PROVIDER_PLAUSIBLE )
 $GLOBALS['innstats']->run();
 
 if ( ! function_exists( 'innstats' ) ) {
+	/**
+	 * @return Statistics\Plugin|null
+	 */
 	function innstats() : ?Statistics\Plugin {
 		global $innstats;
 
