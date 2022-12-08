@@ -9,6 +9,9 @@ use Innocode\Statistics\Providers\Plausible\Entities\Site;
 
 class Provider extends AbstractProvider {
 
+	/**
+	 * Initializes provider.
+	 */
 	public function __construct() {
 		$this->api = new API();
 	}

@@ -26,15 +26,11 @@ trait BearerTokenTrait {
 	}
 
 	/**
-	 * @return string
+	 * @return string|null
 	 */
-	public function auth(): string {
+	public function auth(): ?string {
 		$token = $this->get_token();
 
-		if ( null === $token ) {
-			return '';
-		}
-
-		return "Bearer $token";
+		return $token !== null ? "Bearer $token" : $token;
 	}
 }

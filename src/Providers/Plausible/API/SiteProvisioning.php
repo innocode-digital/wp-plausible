@@ -32,7 +32,7 @@ class SiteProvisioning extends AbstractEndpoint {
 	/**
 	 * @param Site $site
 	 *
-	 * @return Site|WP_Error
+	 * @return Site|\WP_Error
 	 */
 	public function create( Site $site ) {
 		$response = $this->request(
@@ -62,7 +62,7 @@ class SiteProvisioning extends AbstractEndpoint {
 	/**
 	 * @param string $site_id
 	 *
-	 * @return Site|WP_Error
+	 * @return Site|\WP_Error
 	 */
 	public function get( string $site_id ) {
 		$response = $this->request( Requests::GET, $site_id );
@@ -85,7 +85,7 @@ class SiteProvisioning extends AbstractEndpoint {
 	/**
 	 * @param string $site_id
 	 *
-	 * @return Status|WP_Error
+	 * @return Status|\WP_Error
 	 */
 	public function delete( string $site_id ) {
 		$response = $this->request( Requests::DELETE, $site_id );
@@ -109,7 +109,7 @@ class SiteProvisioning extends AbstractEndpoint {
 	 * @param string $site_id
 	 * @param string $name
 	 *
-	 * @return SharedLink|WP_Error
+	 * @return SharedLink|\WP_Error
 	 */
 	public function create_shared_link( string $site_id, string $name ) {
 		$shared_link = new SharedLink();
@@ -143,7 +143,7 @@ class SiteProvisioning extends AbstractEndpoint {
 	/**
 	 * @param Goal $goal
 	 *
-	 * @return Goal|WP_Error
+	 * @return Goal|\WP_Error
 	 */
 	public function create_goal( Goal $goal ) {
 		$response = $this->request(
@@ -174,7 +174,7 @@ class SiteProvisioning extends AbstractEndpoint {
 	 * @param string $site_id
 	 * @param int    $goal_id
 	 *
-	 * @return Status|WP_Error
+	 * @return Status|\WP_Error
 	 */
 	public function delete_goal( string $site_id, int $goal_id ) {
 		$response = $this->request(

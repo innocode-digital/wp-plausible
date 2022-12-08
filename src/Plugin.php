@@ -35,6 +35,7 @@ final class Plugin {
 	 * With same names as in related WordPress functions e.g. is_singular => 'singular'.
 	 *
 	 * @note Priority is important and used to determine which template to set.
+	 * @note TEMPLATE_SINGULAR includes 'attachment', 'single' and 'page'.
 	 *
 	 * @const array
 	 */
@@ -47,7 +48,7 @@ final class Plugin {
 		self::TEMPLATE_PRIVACY_POLICY,
 		self::TEMPLATE_POST_TYPE_ARCHIVE,
 		self::TEMPLATE_TAX,
-		self::TEMPLATE_SINGULAR, // Includes 'attachment', 'single' and 'page'.
+		self::TEMPLATE_SINGULAR,
 		self::TEMPLATE_CATEGORY,
 		self::TEMPLATE_TAG,
 		self::TEMPLATE_AUTHOR,
@@ -73,7 +74,7 @@ final class Plugin {
 	 */
 	private $version;
 	/**
-	 * @var IntegrationInterface[]
+	 * @var Interfaces\IntegrationInterface[]
 	 */
 	private $integrations = [];
 
@@ -124,7 +125,7 @@ final class Plugin {
 	}
 
 	/**
-	 * @return IntegrationInterface[]
+	 * @return Interfaces\IntegrationInterface[]
 	 */
 	public function get_integrations(): array {
 		return $this->integrations;

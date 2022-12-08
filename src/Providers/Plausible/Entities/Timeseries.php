@@ -2,6 +2,8 @@
 
 namespace Innocode\Statistics\Providers\Plausible\Entities;
 
+use DateTime;
+use Exception;
 use Innocode\Statistics\Abstracts\AbstractEntity;
 
 class Timeseries extends AbstractEntity {
@@ -30,6 +32,26 @@ class Timeseries extends AbstractEntity {
 	 * @var int
 	 */
 	protected $visits;
+
+	/**
+	 * @param string $date
+	 *
+	 * @return void
+	 */
+	public function set_date( string $date ): void {
+		try {
+			$this->date = new DateTime( $date );
+		} catch ( Exception $exception ) {
+			error_log( $exception->getMessage() );
+		}
+	}
+
+	/**
+	 * @return DateTime
+	 */
+	public function get_date(): DateTime {
+		return $this->date;
+	}
 
 	/**
 	 * @param int $visitors

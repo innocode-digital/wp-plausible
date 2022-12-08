@@ -6,6 +6,9 @@ use WP_REST_Controller;
 
 class RESTController extends WP_REST_Controller {
 
+	/**
+	 * Initializes base properties.
+	 */
 	public function __construct() {
 		$this->namespace = 'innocode/v1';
 		$this->rest_base = 'statistics';

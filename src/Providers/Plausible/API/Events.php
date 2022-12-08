@@ -18,7 +18,7 @@ class Events extends AbstractEndpoint {
 	/**
 	 * @param Event $event
 	 *
-	 * @return string|WP_Error
+	 * @return string|\WP_Error
 	 */
 	public function push( Event $event ) {
 		$response = $this->request(

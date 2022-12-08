@@ -22,6 +22,9 @@ class API extends AbstractAPI {
 	 */
 	protected $site_provisioning;
 
+	/**
+	 * Initializes endpoints.
+	 */
 	public function __construct() {
 		$this->stats             = new Stats();
 		$this->events            = new Events();

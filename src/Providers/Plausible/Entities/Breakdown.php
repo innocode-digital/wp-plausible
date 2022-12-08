@@ -490,4 +490,20 @@ class Breakdown extends AbstractEntity {
 	public function get_visits(): int {
 		return $this->visits;
 	}
+
+	/**
+	 * @param int $events
+	 *
+	 * @return void
+	 */
+	public function set_events( int $events ): void {
+		$this->events = $events;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function get_events(): int {
+		return $this->visits;
+	}
 }
