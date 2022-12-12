@@ -372,7 +372,7 @@ final class Plugin {
 							$queried_object['type'] = $object->taxonomy;
 						}
 
-						$queried_object['id'] = $object->term_id;
+						$queried_object['id'] = $object->term_taxonomy_id;
 					} else {
 						$queried_object['id'] = get_queried_object_id();
 					}

@@ -46,17 +46,27 @@
     request.send(JSON.stringify(payload));
   };
 
+  var pushQueriedObject = function (queriedObject, referrer, props) {
+    var event = queriedObject.template;
+
+    if (queriedObject.type) {
+      event += ':' + queriedObject.type;
+    }
+
+    if (!props) {
+      props = {};
+    }
+
+    props.id = queriedObject.id;
+
+    pushEvent(event, referrer, props);
+  };
+
   var pageview = function (referrer, queriedObject, props) {
     pushEvent('pageview', referrer, props);
 
     if (queriedObject) {
-      if (!props) {
-        props = {};
-      }
-
-      props.id = queriedObject.id;
-
-      pushEvent(queriedObject.template + ':' + queriedObject.type, referrer, props);
+      pushQueriedObject(queriedObject, referrer, props);
     }
   };
 

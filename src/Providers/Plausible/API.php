@@ -53,7 +53,7 @@ class API extends AbstractAPI {
 	}
 
 	/**
-	 * @return AbstractEndpoint[]
+	 * @return \Innocode\Statistics\Abstracts\AbstractEndpoint[]
 	 */
 	public function get_endpoints(): array {
 		return [

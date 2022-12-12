@@ -25,15 +25,15 @@ class Stats extends AbstractEndpoint {
 
 	/**
 	 * @param string $path
-	 * @param array  $data
+	 * @param array  $query
 	 *
 	 * @return string
 	 */
-	protected function url( string $path, array $data = [] ): string {
+	protected function url( string $path, array $query = [] ): string {
 		return parent::url(
 			$path,
 			wp_parse_args(
-				$data,
+				$query,
 				[
 					'site_id' => $this->site_id(),
 				]
@@ -42,12 +42,12 @@ class Stats extends AbstractEndpoint {
 	}
 
 	/**
-	 * @param array $data
+	 * @param array $query
 	 *
 	 * @return int|\WP_Error
 	 */
-	public function realtime_visitors( array $data = [] ) {
-		$response = $this->request( Requests::GET, 'realtime/visitors', $data );
+	public function realtime_visitors( array $query = [] ) {
+		$response = $this->request( Requests::GET, 'realtime/visitors', $query );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -64,12 +64,12 @@ class Stats extends AbstractEndpoint {
 	}
 
 	/**
-	 * @param array $data
+	 * @param array $query
 	 *
 	 * @return Metrics|\WP_Error
 	 */
-	public function aggregate( array $data = [] ) {
-		$response = $this->request( Requests::GET, 'aggregate', $data );
+	public function aggregate( array $query = [] ) {
+		$response = $this->request( Requests::GET, 'aggregate', $query );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -94,12 +94,12 @@ class Stats extends AbstractEndpoint {
 	}
 
 	/**
-	 * @param array $data
+	 * @param array $query
 	 *
 	 * @return array|\WP_Error
 	 */
-	public function timeseries( array $data = [] ) {
-		$response = $this->request( Requests::GET, 'timeseries', $data );
+	public function timeseries( array $query = [] ) {
+		$response = $this->request( Requests::GET, 'timeseries', $query );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -122,12 +122,12 @@ class Stats extends AbstractEndpoint {
 	}
 
 	/**
-	 * @param array $data
+	 * @param array $query
 	 *
 	 * @return array|\WP_Error
 	 */
-	public function breakdown( array $data = [] ) {
-		$response = $this->request( Requests::GET, 'breakdown', $data );
+	public function breakdown( array $query = [] ) {
+		$response = $this->request( Requests::GET, 'breakdown', $query );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;

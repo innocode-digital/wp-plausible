@@ -106,6 +106,10 @@ class Breakdown extends AbstractEntity {
 	 * @var int
 	 */
 	protected $events;
+	/**
+	 * @var \WP_Comment|\WP_Post|\WP_Term|\WP_User
+	 */
+	protected $object;
 
 	/**
 	 * @param string $name
@@ -505,5 +509,21 @@ class Breakdown extends AbstractEntity {
 	 */
 	public function get_events(): int {
 		return $this->visits;
+	}
+
+	/**
+	 * @param \WP_Comment|\WP_Post|\WP_Term|\WP_User $object
+	 *
+	 * @return void
+	 */
+	public function set_object( $object ): void {
+		$this->object = $object;
+	}
+
+	/**
+	 * @return \WP_Comment|\WP_Post|\WP_Term|\WP_User
+	 */
+	public function get_object() {
+		return $this->object;
 	}
 }

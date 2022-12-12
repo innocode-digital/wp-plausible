@@ -34,11 +34,11 @@ abstract class AbstractEndpoint {
 
 	/**
 	 * @param string $path
-	 * @param array  $data
+	 * @param array  $query
 	 *
 	 * @return string
 	 */
-	protected function url( string $path, array $data = [] ): string {
+	protected function url( string $path, array $query = [] ): string {
 		$url = sprintf(
 			'%s/%s',
 			rtrim( $this->get_api_root(), '/' ),
@@ -51,7 +51,7 @@ abstract class AbstractEndpoint {
 			$url .= "/$path";
 		}
 
-		$query = http_build_query( $data );
+		$query = http_build_query( $query );
 
 		if ( $query ) {
 			$url .= "?$query";
@@ -100,13 +100,13 @@ abstract class AbstractEndpoint {
 	/**
 	 * @param string $method
 	 * @param string $path
-	 * @param array  $data
+	 * @param array  $query
 	 * @param array  $args
 	 *
 	 * @return array|WP_Error
 	 */
-	protected function request( string $method, string $path, array $data = [], array $args = [] ) {
-		return wp_remote_request( $this->url( $path, $data ), $this->request_args( $method, $args ) );
+	protected function request( string $method, string $path, array $query = [], array $args = [] ) {
+		return wp_remote_request( $this->url( $path, $query ), $this->request_args( $method, $args ) );
 	}
 
 	/**

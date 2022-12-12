@@ -62,34 +62,6 @@ abstract class AbstractProvider {
 	 *
 	 * @return array
 	 */
-	abstract public function popular_comments( array $query = [] ): array;
-
-	/**
-	 * @param array $query
-	 *
-	 * @return array
-	 */
-	abstract public function popular_posts( array $query = [] ): array;
-
-	/**
-	 * @param array $query
-	 *
-	 * @return array
-	 */
-	abstract public function popular_terms( array $query = [] ): array;
-
-	/**
-	 * @param array $query
-	 *
-	 * @return array
-	 */
-	abstract public function popular_authors( array $query = [] ): array;
-
-	/**
-	 * @param array $query
-	 *
-	 * @return array
-	 */
 	abstract public function popular_urls( array $query = [] ): array;
 
 	/**
@@ -98,4 +70,44 @@ abstract class AbstractProvider {
 	 * @return array
 	 */
 	abstract public function not_found_pages( array $query = [] ): array;
+
+	/**
+	 * @param string $type
+	 * @param array  $query
+	 * @return array
+	 */
+	abstract public function popular_comments( string $type = 'comment', array $query = [] ): array;
+
+	/**
+	 * @param string $post_type
+	 * @param array  $query
+	 * @return array
+	 */
+	abstract public function popular_posts( string $post_type = 'post', array $query = [] ): array;
+
+	/**
+	 * @param array $query
+	 * @return array
+	 */
+	abstract public function popular_categories( array $query = [] ): array;
+
+	/**
+	 * @param array $query
+	 * @return array
+	 */
+	abstract public function popular_tags( array $query = [] ): array;
+
+	/**
+	 * @param string $taxonomy
+	 * @param array  $query
+	 * @return array
+	 */
+	abstract public function popular_terms( string $taxonomy, array $query = [] ): array;
+
+	/**
+	 * @param array $query
+	 *
+	 * @return array
+	 */
+	abstract public function popular_authors( array $query = [] ): array;
 }
