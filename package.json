@@ -8,7 +8,8 @@
     "build:advert": "uglifyjs ./public/js/advert.js -c -m -o ./public/js/advert.min.js",
     "build:providers": "uglifyjs ./public/js/providers/plausible.js -c -m -o ./public/js/providers/plausible.min.js",
     "build:main": "uglifyjs ./public/js/main.js -c -m -o ./public/js/main.min.js",
-    "build": "npm run build:utils && npm run build:advert && npm run build:providers && npm run build:main",
+    "build:admin": "uglifyjs ./public/js/admin.js -c -m -o ./public/js/admin.min.js",
+    "build": "npm run build:utils && npm run build:advert && npm run build:providers && npm run build:main && npm run build:admin",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

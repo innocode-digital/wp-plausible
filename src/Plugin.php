@@ -77,6 +77,10 @@ final class Plugin {
 	 * @var Interfaces\IntegrationInterface[]
 	 */
 	private $integrations = [];
+	/**
+	 * @var Admin
+	 */
+	private $admin;
 
 	/**
 	 * @param array $allowed_providers
@@ -94,6 +98,8 @@ final class Plugin {
 		$this->version         = new Version();
 
 		$this->integrations[ self::INTEGRATION_FLUSH_CACHE ] = new Integrations\FlushCache\Integration();
+
+		$this->admin = new Admin();
 	}
 
 	/**
@@ -129,6 +135,13 @@ final class Plugin {
 	 */
 	public function get_integrations(): array {
 		return $this->integrations;
+	}
+
+	/**
+	 * @return Admin
+	 */
+	public function get_admin(): Admin {
+		return $this->admin;
 	}
 
 	/**
@@ -186,6 +199,10 @@ final class Plugin {
 		add_action( 'rest_api_init', [ $this->get_rest_controller(), 'register_routes' ] );
 		add_action( 'wp_head', [ $this, 'enqueue_scripts' ], 2 );
 		add_action( 'embed_head', [ $this, 'enqueue_scripts' ], 2 );
+
+		if ( is_admin() ) {
+			$this->get_admin()->run();
+		}
 	}
 
 	/**
