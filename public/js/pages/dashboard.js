@@ -2,7 +2,7 @@
   wp.domReady(() => {
     const { api, charts } = innstats;
 
-    const number2human = (number) =>
+    const number2human = (number = 0) =>
       new Intl.NumberFormat(document.documentElement.lang || 'en-US').format(
         number
       );
@@ -17,7 +17,7 @@
         }
       );
 
-    const seconds2human = (seconds) => {
+    const seconds2human = (seconds = 0) => {
       const datetime = new Date(seconds * 1000).toISOString();
 
       return seconds < 3600

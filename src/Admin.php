@@ -37,7 +37,7 @@ final class Admin {
 	 * @return void
 	 */
 	public function add_pages(): void {
-		$this->pages[] = add_menu_page(
+		$this->pages[ self::PAGE_GENERAL ] = add_menu_page(
 			__( 'Analytics - Innstats', 'innstats' ),
 			__( 'Innstats', 'innstats' ),
 			'manage_options',
@@ -54,7 +54,7 @@ final class Admin {
 			self::PAGE_NOT_FOUND_PAGES => __( 'Not Found Pages', 'innstats' ),
 			self::PAGE_CONVERSIONS     => __( 'Conversions', 'innstats' ),
 		] as $name => $title ) {
-			$this->pages[] = add_submenu_page(
+			$this->pages[ $name ] = add_submenu_page(
 				'innstats-' . self::PAGE_GENERAL,
 				sprintf( '%s - %s', $title, __( 'Innstats', 'innstats' ) ),
 				$title,
@@ -80,9 +80,16 @@ final class Admin {
 	 * @return void
 	 */
 	public function init(): void {
-		foreach ( $this->get_pages() as $page ) {
-			add_action( "admin_print_styles-$page", [ $this, 'enqueue_styles' ] );
-			add_action( "admin_print_scripts-$page", [ $this, 'enqueue_scripts' ] );
+		foreach ( $this->get_pages() as $page => $hook_suffix ) {
+			add_action( "admin_print_scripts-$hook_suffix", [ $this, 'enqueue_scripts' ] );
+
+			if ( method_exists( $this, "enqueue_{$page}_styles" ) ) {
+				add_action( "admin_print_styles-$hook_suffix", [ $this, "enqueue_{$page}_styles" ] );
+			}
+
+			if ( method_exists( $this, "enqueue_{$page}_scripts" ) ) {
+				add_action( "admin_print_scripts-$hook_suffix", [ $this, "enqueue_{$page}_scripts" ] );
+			}
 		}
 
 		add_action(
@@ -149,7 +156,7 @@ final class Admin {
 	/**
 	 * @return void
 	 */
-	public function enqueue_styles(): void {
+	public function enqueue_general_styles(): void {
 		wp_enqueue_style(
 			'innstats-pages-dashboard',
 			Plugin::url( 'pages/dashboard', 'css' ),
@@ -162,6 +169,29 @@ final class Admin {
 	 * @return void
 	 */
 	public function enqueue_scripts(): void {
+		wp_enqueue_script(
+			'innstats-api',
+			Plugin::url( 'api' ),
+			[ 'wp-api-request' ],
+			INNSTATS_VERSION,
+			true
+		);
+
+		wp_add_inline_script(
+			'innstats-api',
+			'window.innstats = ' . json_encode(
+				[
+					'home_url' => esc_url_raw( home_url() ),
+				]
+			) . ';',
+			'before'
+		);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_general_scripts(): void {
 		// @phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 		wp_enqueue_script(
 			'chart.js',
@@ -181,14 +211,6 @@ final class Admin {
 		);
 
 		wp_enqueue_script(
-			'innstats-api',
-			Plugin::url( 'api' ),
-			[ 'wp-api-request' ],
-			INNSTATS_VERSION,
-			true
-		);
-
-		wp_enqueue_script(
 			'innstats-charts',
 			Plugin::url( 'charts' ),
 			[],
@@ -199,19 +221,9 @@ final class Admin {
 		wp_enqueue_script(
 			'innstats-pages-dashboard',
 			Plugin::url( 'pages/dashboard' ),
-			[ 'wp-dom-ready' ],
+			[ 'wp-dom-ready', 'innstats-api' ],
 			INNSTATS_VERSION,
 			true
-		);
-
-		wp_add_inline_script(
-			'innstats-api',
-			'window.innstats = ' . json_encode(
-				[
-					'home_url' => esc_url_raw( home_url() ),
-				]
-			) . ';',
-			'before'
 		);
 	}
 
