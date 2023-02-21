@@ -1,11 +1,11 @@
 <?php
 
-namespace Innocode\Statistics\Providers\Plausible;
+namespace WPD\Statistics\Providers\Plausible;
 
-use Innocode\Statistics\Abstracts\AbstractAPI;
-use Innocode\Statistics\Providers\Plausible\API\Events;
-use Innocode\Statistics\Providers\Plausible\API\SiteProvisioning;
-use Innocode\Statistics\Providers\Plausible\API\Stats;
+use WPD\Statistics\Abstracts\AbstractAPI;
+use WPD\Statistics\Providers\Plausible\API\Events;
+use WPD\Statistics\Providers\Plausible\API\SiteProvisioning;
+use WPD\Statistics\Providers\Plausible\API\Stats;
 
 class API extends AbstractAPI {
 
@@ -53,7 +53,7 @@ class API extends AbstractAPI {
 	}
 
 	/**
-	 * @return \Innocode\Statistics\Abstracts\AbstractEndpoint[]
+	 * @return \WPD\Statistics\Abstracts\AbstractEndpoint[]
 	 */
 	public function get_endpoints(): array {
 		return [

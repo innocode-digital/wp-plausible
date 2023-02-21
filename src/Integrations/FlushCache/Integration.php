@@ -1,9 +1,9 @@
 <?php
 
-namespace Innocode\Statistics\Integrations\FlushCache;
+namespace WPD\Statistics\Integrations\FlushCache;
 
-use Innocode\Statistics\Interfaces\IntegrationInterface;
-use Innocode\Statistics\Plugin;
+use WPD\Statistics\Interfaces\IntegrationInterface;
+use WPD\Statistics\Plugin;
 
 class Integration implements IntegrationInterface {
 
@@ -15,7 +15,7 @@ class Integration implements IntegrationInterface {
 	public function run( Plugin $plugin ): void {
 		if ( function_exists( 'flush_cache_add_button' ) ) {
 			flush_cache_add_button(
-				__( 'Innstats version', 'innocode-prerender' ),
+				__( 'Innstats version', 'innstats' ),
 				[ $plugin->get_version(), 'delete' ]
 			);
 		}

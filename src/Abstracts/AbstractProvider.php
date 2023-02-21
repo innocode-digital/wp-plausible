@@ -1,9 +1,9 @@
 <?php
 
-namespace Innocode\Statistics\Abstracts;
+namespace WPD\Statistics\Abstracts;
 
-use Innocode\Statistics\Plugin;
-use Innocode\Statistics\Traits\SiteIdTrait;
+use WPD\Statistics\Plugin;
+use WPD\Statistics\Traits\SiteIdTrait;
 
 abstract class AbstractProvider {
 

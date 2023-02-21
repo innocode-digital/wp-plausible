@@ -1,10 +1,10 @@
 <?php
 
-namespace Innocode\Statistics\Providers\Plausible\Entities;
+namespace WPD\Statistics\Providers\Plausible\Entities;
 
 use DateTime;
 use Exception;
-use Innocode\Statistics\Abstracts\AbstractEntity;
+use WPD\Statistics\Abstracts\AbstractEntity;
 
 class Timeseries extends AbstractEntity {
 

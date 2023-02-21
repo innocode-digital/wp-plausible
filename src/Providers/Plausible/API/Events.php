@@ -1,9 +1,9 @@
 <?php
 
-namespace Innocode\Statistics\Providers\Plausible\API;
+namespace WPD\Statistics\Providers\Plausible\API;
 
-use Innocode\Statistics\Abstracts\AbstractEndpoint;
-use Innocode\Statistics\Providers\Plausible\Entities\Event;
+use WPD\Statistics\Abstracts\AbstractEndpoint;
+use WPD\Statistics\Providers\Plausible\Entities\Event;
 use Requests;
 
 class Events extends AbstractEndpoint {

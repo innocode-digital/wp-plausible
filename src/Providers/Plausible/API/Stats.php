@@ -1,14 +1,14 @@
 <?php
 
-namespace Innocode\Statistics\Providers\Plausible\API;
+namespace WPD\Statistics\Providers\Plausible\API;
 
-use Innocode\Statistics\Abstracts\AbstractEndpoint;
-use Innocode\Statistics\Providers\Plausible\Entities\Breakdown;
-use Innocode\Statistics\Providers\Plausible\Entities\Metric;
-use Innocode\Statistics\Providers\Plausible\Entities\Metrics;
-use Innocode\Statistics\Providers\Plausible\Entities\Timeseries;
-use Innocode\Statistics\Traits\BearerTokenTrait;
-use Innocode\Statistics\Traits\SiteIdTrait;
+use WPD\Statistics\Abstracts\AbstractEndpoint;
+use WPD\Statistics\Providers\Plausible\Entities\Breakdown;
+use WPD\Statistics\Providers\Plausible\Entities\Metric;
+use WPD\Statistics\Providers\Plausible\Entities\Metrics;
+use WPD\Statistics\Providers\Plausible\Entities\Timeseries;
+use WPD\Statistics\Traits\BearerTokenTrait;
+use WPD\Statistics\Traits\SiteIdTrait;
 use Requests;
 use WP_Http;
 

@@ -1,15 +1,21 @@
+/* eslint-disable strict */
+/* eslint-disable no-var */
+/* eslint-disable prefer-destructuring */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable prefer-template */
 (function (innstats, location, document) {
-
   'use strict';
 
   var utils = innstats.utils;
   var providers = innstats.providers;
   var referrer = document.referrer;
 
-  var pageview = function (referrer, queriedObject, props) {
-    for (var provider in providers) {
+  var pageview = function (ref, queriedObject, props) {
+    var provider;
+
+    for (provider in providers) {
       if (utils.has(providers, provider)) {
-        providers[provider].pageview(referrer, queriedObject, props);
+        providers[provider].pageview(ref, queriedObject, props);
       }
     }
   };
@@ -25,12 +31,18 @@
   };
 
   var handleQueriedObject = function () {
+    var sanitizedReferrer;
+    var sanitizedHref;
+    var request;
+    var urlParts;
+    var url;
+
     if (referrer === location.href) {
       return;
     }
 
-    var sanitizedReferrer = referrer.split('#')[0];
-    var sanitizedHref = location.href.split('#')[0];
+    sanitizedReferrer = referrer.split('#')[0];
+    sanitizedHref = location.href.split('#')[0];
 
     if (sanitizedReferrer === sanitizedHref) {
       handlePageview();
@@ -38,9 +50,9 @@
       return;
     }
 
-    var request = utils.xhr();
-    var urlParts = sanitizedHref.split('?');
-    var url = urlParts[0] + '?' + innstats.query_var + '=queried_object';
+    request = utils.xhr();
+    urlParts = sanitizedHref.split('?');
+    url = urlParts[0] + '?' + innstats.query_var + '=queried_object';
 
     if (urlParts[1]) {
       url += '&' + urlParts[1];
@@ -49,20 +61,21 @@
     request.withCredentials = true;
     request.open('GET', url, true);
     request.setRequestHeader('Accept', 'application/json');
-    request.onreadystatechange = (function (referrer) {
+    request.onreadystatechange = (function (ref) {
       return function () {
+        var response;
+
         if (request.readyState !== 4) {
           return;
         }
 
-        var response;
-
         try {
           response = JSON.parse(request.responseText);
         } catch (e) {
+          // eslint-disable-next-line no-empty
         }
 
-        pageview(referrer, response);
+        pageview(ref, response);
       };
     })(referrer);
     request.send();
@@ -88,5 +101,6 @@
     }
   }
 
+  // eslint-disable-next-line no-param-reassign
   innstats.pageview = pageview;
 })(window.innstats, window.location, window.document);

@@ -1,5 +1,11 @@
+/* eslint-disable strict */
+/* eslint-disable no-var */
+/* eslint-disable prefer-destructuring */
+/* eslint-disable object-shorthand */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable prefer-template */
+/* eslint-disable no-param-reassign */
 (function (innstats, location, document, navigator) {
-
   'use strict';
 
   var utils = innstats.utils;
@@ -10,12 +16,22 @@
       name: name,
       url: location.href,
       referrer: referrer,
-      screen_width: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
+      screen_width:
+        window.innerWidth ||
+        document.documentElement.clientWidth ||
+        document.body.clientWidth,
       props: {
-        screen_height: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight,
-        device_pixel_ratio: typeof window.devicePixelRatio !== 'undefined' ? window.devicePixelRatio : 0,
-        language: typeof navigator.language !== 'undefined' ? navigator.language : ''
-      }
+        screen_height:
+          window.innerHeight ||
+          document.documentElement.clientHeight ||
+          document.body.clientHeight,
+        device_pixel_ratio:
+          typeof window.devicePixelRatio !== 'undefined'
+            ? window.devicePixelRatio
+            : 0,
+        language:
+          typeof navigator.language !== 'undefined' ? navigator.language : '',
+      } // eslint-disable-line prettier/prettier
     };
     var prop;
     var request;

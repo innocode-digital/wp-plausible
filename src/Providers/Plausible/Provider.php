@@ -1,11 +1,11 @@
 <?php
 
-namespace Innocode\Statistics\Providers\Plausible;
+namespace WPD\Statistics\Providers\Plausible;
 
-use Innocode\Statistics\Abstracts\AbstractProvider;
-use Innocode\Statistics\Plugin;
-use Innocode\Statistics\Providers\Plausible\Entities\Event;
-use Innocode\Statistics\Providers\Plausible\Entities\Site;
+use WPD\Statistics\Abstracts\AbstractProvider;
+use WPD\Statistics\Plugin;
+use WPD\Statistics\Providers\Plausible\Entities\Event;
+use WPD\Statistics\Providers\Plausible\Entities\Site;
 
 class Provider extends AbstractProvider {
 
@@ -197,8 +197,8 @@ class Provider extends AbstractProvider {
 		return $this->popular_objects(
 			'comment',
 			$type,
-			[ 'Innocode\Statistics\Helpers', 'get_comments_by_ids' ],
-			[ 'Innocode\Statistics\Helpers', 'comment_id' ],
+			[ 'WPD\Statistics\Helpers', 'get_comments_by_ids' ],
+			[ 'WPD\Statistics\Helpers', 'comment_id' ],
 			$query
 		);
 	}
@@ -212,8 +212,8 @@ class Provider extends AbstractProvider {
 		return $this->popular_objects(
 			Plugin::TEMPLATE_SINGULAR,
 			$post_type,
-			[ 'Innocode\Statistics\Helpers', 'get_posts_by_ids' ],
-			[ 'Innocode\Statistics\Helpers', 'post_id' ],
+			[ 'WPD\Statistics\Helpers', 'get_posts_by_ids' ],
+			[ 'WPD\Statistics\Helpers', 'post_id' ],
 			$query
 		);
 	}
@@ -226,8 +226,8 @@ class Provider extends AbstractProvider {
 		return $this->popular_objects(
 			Plugin::TEMPLATE_CATEGORY,
 			'',
-			[ 'Innocode\Statistics\Helpers', 'get_terms_by_ids' ],
-			[ 'Innocode\Statistics\Helpers', 'term_id' ],
+			[ 'WPD\Statistics\Helpers', 'get_terms_by_ids' ],
+			[ 'WPD\Statistics\Helpers', 'term_id' ],
 			$query
 		);
 	}
@@ -240,8 +240,8 @@ class Provider extends AbstractProvider {
 		return $this->popular_objects(
 			Plugin::TEMPLATE_TAG,
 			'',
-			[ 'Innocode\Statistics\Helpers', 'get_terms_by_ids' ],
-			[ 'Innocode\Statistics\Helpers', 'term_id' ],
+			[ 'WPD\Statistics\Helpers', 'get_terms_by_ids' ],
+			[ 'WPD\Statistics\Helpers', 'term_id' ],
 			$query
 		);
 	}
@@ -255,8 +255,8 @@ class Provider extends AbstractProvider {
 		return $this->popular_objects(
 			Plugin::TEMPLATE_TAX,
 			$taxonomy,
-			[ 'Innocode\Statistics\Helpers', 'get_terms_by_ids' ],
-			[ 'Innocode\Statistics\Helpers', 'term_id' ],
+			[ 'WPD\Statistics\Helpers', 'get_terms_by_ids' ],
+			[ 'WPD\Statistics\Helpers', 'term_id' ],
 			$query
 		);
 	}
@@ -269,8 +269,8 @@ class Provider extends AbstractProvider {
 		return $this->popular_objects(
 			Plugin::TEMPLATE_AUTHOR,
 			'',
-			[ 'Innocode\Statistics\Helpers', 'get_authors_by_ids' ],
-			[ 'Innocode\Statistics\Helpers', 'user_id' ],
+			[ 'WPD\Statistics\Helpers', 'get_authors_by_ids' ],
+			[ 'WPD\Statistics\Helpers', 'user_id' ],
 			$query
 		);
 	}

@@ -14,7 +14,7 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 	require_once __DIR__ . '/vendor/autoload.php';
 }
 
-use Innocode\Statistics;
+use WPD\Statistics;
 
 define( 'INNSTATS_FILE', __FILE__ );
 define( 'INNSTATS_VERSION', '1.0.0' );

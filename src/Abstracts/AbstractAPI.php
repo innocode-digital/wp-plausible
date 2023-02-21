@@ -1,6 +1,6 @@
 <?php
 
-namespace Innocode\Statistics\Abstracts;
+namespace WPD\Statistics\Abstracts;
 
 abstract class AbstractAPI {
 

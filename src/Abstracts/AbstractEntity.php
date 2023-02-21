@@ -1,6 +1,8 @@
 <?php
 
-namespace Innocode\Statistics\Abstracts;
+namespace WPD\Statistics\Abstracts;
+
+use DateTime;
 
 abstract class AbstractEntity {
 
@@ -57,7 +59,13 @@ abstract class AbstractEntity {
 			$value = $this->{"get_$property"}();
 
 			if ( ! ( $property === 'props' && empty( $value ) ) ) {
-				$data[ $property ] = $value;
+				if ( $value instanceof AbstractEntity ) {
+					$data[ $property ] = $value->to_array();
+				} elseif ( $value instanceof DateTime ) {
+					$data[ $property ] = $value->format( 'Y-m-d\TH:i:s' );
+				} else {
+					$data[ $property ] = $value;
+				}
 			}
 		}
 

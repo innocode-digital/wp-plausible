@@ -1,9 +1,14 @@
+/* eslint-disable strict */
+/* eslint-disable object-shorthand */
+/* eslint-disable no-var */
+/* eslint-disable prefer-template */
+/* global ActiveXObject */
 (function (innstats, location, document, navigator, history) {
+  'use strict';
 
   // Yep, old-school - ES3 with even XMLHttpRequest for better cross browser support.
 
-  'use strict';
-
+  // eslint-disable-next-line no-param-reassign
   innstats.utils = {
     has: function (obj, prop) {
       return Object.prototype.hasOwnProperty.call(obj, prop);
@@ -21,18 +26,22 @@
       return el;
     },
     patchHistoryMethod: function (method, fn) {
+      var original;
+
       if (!history) {
         return;
       }
 
-      var original = history[method];
+      original = history[method];
 
       if (!original) {
         return;
       }
 
-      history[method] = function () {
-        var result = original.apply(this, arguments);
+      // eslint-disable-next-line no-param-reassign
+      history[method] = function patchHistoryMethod() {
+        // eslint-disable-next-line prefer-rest-params
+        const result = original.apply(this, arguments);
 
         fn();
 
@@ -43,7 +52,15 @@
       return innstats.providers[provider].api_root.replace(/\/+$/, '') + path;
     },
     xhr: function () {
-      return window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-    }
+      return window.XMLHttpRequest
+        ? new XMLHttpRequest()
+        : new ActiveXObject('Microsoft.XMLHTTP');
+    },
   };
-})(window.innstats, window.location, window.document, window.navigator, window.history);
+})(
+  window.innstats,
+  window.location,
+  window.document,
+  window.navigator,
+  window.history
+);

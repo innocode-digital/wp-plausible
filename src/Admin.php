@@ -1,8 +1,8 @@
 <?php
 
-namespace Innocode\Statistics;
+namespace WPD\Statistics;
 
-use Innocode\Statistics\Traits\ViewsTrait;
+use WPD\Statistics\Traits\ViewsTrait;
 
 final class Admin {
 
@@ -81,25 +81,81 @@ final class Admin {
 	 */
 	public function init(): void {
 		foreach ( $this->get_pages() as $page ) {
+			add_action( "admin_print_styles-$page", [ $this, 'enqueue_styles' ] );
 			add_action( "admin_print_scripts-$page", [ $this, 'enqueue_scripts' ] );
 		}
 
-		foreach ( [
-			'current_visitors',
-			'general',
-			'sources',
-			'campaigns',
-			'pages',
-			'devices',
-			'browsers',
-			'ad_blocker',
-			'os',
-		] as $name ) {
-			add_action( 'innstats_admin_page_' . self::PAGE_GENERAL, [ $this, "widget_$name" ] );
-		}
+		add_action(
+			'innstats_admin_page_' . self::PAGE_GENERAL,
+			function () {
+				// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
+				echo $this->section(
+					'general',
+					__( 'General', 'innstats' ),
+					[
+						'misc',
+						'country',
+						'timeseries',
+						'bounce_rate',
+						'visit_duration',
+					]
+				);
+
+				// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
+				echo $this->section(
+					'top_pages',
+					__( 'Top Pages', 'innstats' ),
+					[
+						'page',
+						'entry_page',
+						'exit_page',
+					]
+				);
+
+				// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
+				echo $this->section(
+					'top_sources',
+					__( 'Top Sources', 'innstats' ),
+					[
+						'source',
+						'utm_medium',
+						'utm_source',
+						'utm_campaign',
+						'utm_term',
+						'utm_content',
+					]
+				);
+
+				// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
+				echo $this->section(
+					'devices_and_browsers',
+					__( 'Devices & Browsers', 'innstats' ),
+					[
+						'device',
+						'browser',
+						'os',
+						'device_pixel_ratio',
+						'language',
+						'ad_blocker',
+					]
+				);
+			}
+		);
 
 		add_action( 'innstats_admin_page_' . self::PAGE_POPULARITY, [ $this, 'widgets_popularity' ] );
 		add_action( 'innstats_admin_page_' . self::PAGE_NOT_FOUND_PAGES, [ $this, 'widget_not_found_pages' ] );
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_styles(): void {
+		wp_enqueue_style(
+			'innstats-pages-dashboard',
+			Plugin::url( 'pages/dashboard', 'css' ),
+			[],
+			INNSTATS_VERSION
+		);
 	}
 
 	/**
@@ -115,88 +171,84 @@ final class Admin {
 			true
 		);
 
+		// @phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 		wp_enqueue_script(
-			'innstats-admin',
-			Plugin::url( 'admin' ),
-			[ 'wp-dom-ready', 'wp-api-request', 'chart.js' ],
+			'chartjs-chart-geo',
+			'https://cdn.jsdelivr.net/npm/chartjs-chart-geo@4.1.2/build/index.umd.min.js',
+			[],
+			null,
+			true
+		);
+
+		wp_enqueue_script(
+			'innstats-api',
+			Plugin::url( 'api' ),
+			[ 'wp-api-request' ],
 			INNSTATS_VERSION,
 			true
+		);
+
+		wp_enqueue_script(
+			'innstats-charts',
+			Plugin::url( 'charts' ),
+			[],
+			INNSTATS_VERSION,
+			true
+		);
+
+		wp_enqueue_script(
+			'innstats-pages-dashboard',
+			Plugin::url( 'pages/dashboard' ),
+			[ 'wp-dom-ready' ],
+			INNSTATS_VERSION,
+			true
+		);
+
+		wp_add_inline_script(
+			'innstats-api',
+			'window.innstats = ' . json_encode(
+				[
+					'home_url' => esc_url_raw( home_url() ),
+				]
+			) . ';',
+			'before'
+		);
+	}
+
+	/**
+	 * @param string $name
+	 * @param string $title
+	 * @param array  $widgets
+	 * @return string
+	 */
+	private function section( string $name, string $title, array $widgets ): string {
+		return sprintf(
+			'<section id="innstats-section-%1$s" class="innstats-section innstats-section_%1$s"><h2 class="innstats-section__title">%2$s</h2><div class="innstats-section__content">%3$s</div></section>',
+			esc_attr( $name ),
+			esc_html( $title ),
+			implode(
+				'',
+				array_map(
+					function ( string $widget ): string {
+						return $this->widget( $widget );
+					},
+					$widgets
+				)
+			)
 		);
 	}
 
 	/**
 	 * @param string $name
 	 *
-	 * @return void
+	 * @return string
 	 */
-	private function widget( string $name ): void {
-		printf(
-			'<canvas id="innstats-widget-%1$s" class="innstats-widget innstats-widget_%1$s"></canvas>',
-			esc_attr( $name )
+	private function widget( string $name ): string {
+		return sprintf(
+			'<div class="innstats-widget innstats-widget_%1$s postbox"><div class="inside"><%2$s id="innstats-widget-%1$s"></%2$s></div></div>',
+			esc_attr( $name ),
+			'misc' === $name ? 'div' : 'canvas'
 		);
-	}
-
-	/**
-	 * @return void
-	 */
-	public function widget_current_visitors(): void {
-		$this->widget( 'current_visitors' );
-	}
-
-	/**
-	 * @return void
-	 */
-	public function widget_general(): void {
-		$this->widget( 'general' );
-	}
-
-	/**
-	 * @return void
-	 */
-	public function widget_sources(): void {
-		$this->widget( 'sources' );
-	}
-
-	/**
-	 * @return void
-	 */
-	public function widget_campaigns(): void {
-		$this->widget( 'campaigns' );
-	}
-
-	/**
-	 * @return void
-	 */
-	public function widget_pages(): void {
-		$this->widget( 'pages' );
-	}
-
-	/**
-	 * @return void
-	 */
-	public function widget_devices(): void {
-		$this->widget( 'devices' );
-	}
-
-	/**
-	 * @return void
-	 */
-	public function widget_browsers(): void {
-		$this->widget( 'browsers' );
-	}
-
-	/**
-	 * @return void
-	 */
-	public function widget_ad_blocker(): void {
-		$this->widget( 'ad_blocker' );
-	}
-
-	/**
-	 * @return void
-	 */
-	public function widget_os(): void {
-		$this->widget( 'os' );
 	}
 
 	/**

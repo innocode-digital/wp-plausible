@@ -1,6 +1,6 @@
 <?php
 
-namespace Innocode\Statistics;
+namespace WPD\Statistics;
 
 use WP_Comment;
 use WP_Comment_Query;

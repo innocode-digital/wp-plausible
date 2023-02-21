@@ -1,0 +1,5 @@
+# Dependency directories
+node_modules/
+
+# Minified files
+public/js/**/*.min.js

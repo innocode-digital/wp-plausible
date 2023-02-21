@@ -1,8 +1,11 @@
 <?php
 
-namespace Innocode\Statistics;
+namespace WPD\Statistics;
 
+use WPD\Statistics\Providers\Plausible\Entities\Breakdown;
+use WPD\Statistics\Providers\Plausible\Entities\Timeseries;
 use WP_Error;
+use WP_Http;
 use WP_REST_Controller;
 use WP_REST_Request;
 use WP_REST_Server;
@@ -13,7 +16,7 @@ class RESTController extends WP_REST_Controller {
 	 * Initializes base properties.
 	 */
 	public function __construct() {
-		$this->namespace = 'innocode/v1';
+		$this->namespace = 'wpd/v1';
 		$this->rest_base = 'statistics';
 	}
 
@@ -89,14 +92,20 @@ class RESTController extends WP_REST_Controller {
 	 * @return \WP_REST_Response|WP_Error
 	 */
 	public function realtime_visitors( WP_REST_Request $request ) {
-		$provider = innstats()->get_provider( $request['provider'] );
-		$response = $provider->get_api()->get_stats()->realtime_visitors();
+		$provider          = innstats()->get_provider( $request['provider'] );
+		$realtime_visitors = $provider->get_api()->get_stats()->realtime_visitors();
 
-		if ( is_wp_error( $response ) ) {
-			return $response;
+		if ( is_wp_error( $realtime_visitors ) ) {
+			$realtime_visitors->add_data(
+				[
+					'status' => WP_Http::INTERNAL_SERVER_ERROR,
+				]
+			);
+
+			return $realtime_visitors;
 		}
 
-		return rest_ensure_response( $response );
+		return rest_ensure_response( $realtime_visitors );
 	}
 
 	/**
@@ -105,14 +114,24 @@ class RESTController extends WP_REST_Controller {
 	 * @return \WP_REST_Response|WP_Error
 	 */
 	public function aggregate( WP_REST_Request $request ) {
-		$provider = innstats()->get_provider( $request['provider'] );
-		$response = $provider->get_api()->get_stats()->aggregate( $request );
+		$params   = $request->get_params();
+		$provider = innstats()->get_provider( $params['provider'] );
 
-		if ( is_wp_error( $response ) ) {
-			return $response;
+		unset( $params['provider'] );
+
+		$aggregate = $provider->get_api()->get_stats()->aggregate( $params );
+
+		if ( is_wp_error( $aggregate ) ) {
+			$aggregate->add_data(
+				[
+					'status' => WP_Http::INTERNAL_SERVER_ERROR,
+				]
+			);
+
+			return $aggregate;
 		}
 
-		return rest_ensure_response( $response );
+		return rest_ensure_response( $aggregate->to_array() );
 	}
 
 	/**
@@ -121,14 +140,31 @@ class RESTController extends WP_REST_Controller {
 	 * @return \WP_REST_Response|WP_Error
 	 */
 	public function timeseries( WP_REST_Request $request ) {
-		$provider = innstats()->get_provider( $request['provider'] );
-		$response = $provider->get_api()->get_stats()->timeseries( $request );
+		$params   = $request->get_params();
+		$provider = innstats()->get_provider( $params['provider'] );
 
-		if ( is_wp_error( $response ) ) {
-			return $response;
+		unset( $params['provider'] );
+
+		$timeseries = $provider->get_api()->get_stats()->timeseries( $params );
+
+		if ( is_wp_error( $timeseries ) ) {
+			$timeseries->add_data(
+				[
+					'status' => WP_Http::INTERNAL_SERVER_ERROR,
+				]
+			);
+
+			return $timeseries;
 		}
 
-		return rest_ensure_response( $response );
+		return rest_ensure_response(
+			array_map(
+				function ( Timeseries $item ) {
+					return $item->to_array();
+				},
+				$timeseries
+			)
+		);
 	}
 
 	/**
@@ -137,14 +173,31 @@ class RESTController extends WP_REST_Controller {
 	 * @return \WP_REST_Response|WP_Error
 	 */
 	public function breakdown( WP_REST_Request $request ) {
-		$provider = innstats()->get_provider( $request['provider'] );
-		$response = $provider->get_api()->get_stats()->breakdown( $request );
+		$params   = $request->get_params();
+		$provider = innstats()->get_provider( $params['provider'] );
 
-		if ( is_wp_error( $response ) ) {
-			return $response;
+		unset( $params['provider'] );
+
+		$breakdown = $provider->get_api()->get_stats()->breakdown( $params );
+
+		if ( is_wp_error( $breakdown ) ) {
+			$breakdown->add_data(
+				[
+					'status' => WP_Http::INTERNAL_SERVER_ERROR,
+				]
+			);
+
+			return $breakdown;
 		}
 
-		return rest_ensure_response( $response );
+		return rest_ensure_response(
+			array_map(
+				function ( Breakdown $item ) {
+					return $item->to_array();
+				},
+				$breakdown
+			)
+		);
 	}
 
 	/**

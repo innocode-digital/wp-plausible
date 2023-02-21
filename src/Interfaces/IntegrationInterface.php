@@ -1,8 +1,8 @@
 <?php
 
-namespace Innocode\Statistics\Interfaces;
+namespace WPD\Statistics\Interfaces;
 
-use Innocode\Statistics\Plugin;
+use WPD\Statistics\Plugin;
 
 interface IntegrationInterface {
 

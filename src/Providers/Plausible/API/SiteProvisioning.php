@@ -1,13 +1,13 @@
 <?php
 
-namespace Innocode\Statistics\Providers\Plausible\API;
+namespace WPD\Statistics\Providers\Plausible\API;
 
-use Innocode\Statistics\Abstracts\AbstractEndpoint;
-use Innocode\Statistics\Providers\Plausible\Entities\Goal;
-use Innocode\Statistics\Providers\Plausible\Entities\SharedLink;
-use Innocode\Statistics\Providers\Plausible\Entities\Site;
-use Innocode\Statistics\Providers\Plausible\Entities\Status;
-use Innocode\Statistics\Traits\BearerTokenTrait;
+use WPD\Statistics\Abstracts\AbstractEndpoint;
+use WPD\Statistics\Providers\Plausible\Entities\Goal;
+use WPD\Statistics\Providers\Plausible\Entities\SharedLink;
+use WPD\Statistics\Providers\Plausible\Entities\Site;
+use WPD\Statistics\Providers\Plausible\Entities\Status;
+use WPD\Statistics\Traits\BearerTokenTrait;
 use Requests;
 use WP_Http;
 

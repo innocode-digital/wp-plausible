@@ -1,6 +1,6 @@
 <?php
 
-namespace Innocode\Statistics\Traits;
+namespace WPD\Statistics\Traits;
 
 trait BearerTokenTrait {
 

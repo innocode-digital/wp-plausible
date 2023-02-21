@@ -1,6 +1,6 @@
 <?php
 
-namespace Innocode\Statistics;
+namespace WPD\Statistics;
 
 class Query {
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Innocode\Statistics\Abstracts;
+namespace WPD\Statistics\Abstracts;
 
 use WP_Error;
 
@@ -49,6 +49,12 @@ abstract class AbstractEndpoint {
 
 		if ( $path ) {
 			$url .= "/$path";
+		}
+
+		foreach ( $query as $key => $value ) {
+			if ( is_array( $value ) ) {
+				$query[ $key ] = implode( ',', $value );
+			}
 		}
 
 		$query = http_build_query( $query );

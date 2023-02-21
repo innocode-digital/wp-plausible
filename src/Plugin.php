@@ -1,10 +1,10 @@
 <?php
 
-namespace Innocode\Statistics;
+namespace WPD\Statistics;
 
-use Innocode\Statistics\Abstracts\AbstractProvider;
-use Innocode\Statistics\Providers\Plausible;
-use Innocode\Statistics\Traits\SiteIdTrait;
+use WPD\Statistics\Abstracts\AbstractProvider;
+use WPD\Statistics\Providers\Plausible;
+use WPD\Statistics\Traits\SiteIdTrait;
 use Innocode\Version\Version;
 use WP_Http;
 use WP_Term;
@@ -307,14 +307,15 @@ final class Plugin {
 
 	/**
 	 * @param string $file
+	 * @param string $extension
 	 * @return string
 	 */
-	public static function url( string $file ): string {
+	public static function url( string $file, string $extension = 'js' ): string {
 		// Domain mapping processes mu-plugins directory wrong.
 		$has_domain_mapping = remove_filter( 'plugins_url', 'domain_mapping_plugins_uri', 1 );
 		$suffix             = wp_scripts_get_suffix();
 
-		$url = plugins_url( "public/js/$file$suffix.js", INNSTATS_FILE );
+		$url = plugins_url( "public/$extension/$file$suffix.$extension", INNSTATS_FILE );
 
 		if ( $has_domain_mapping ) {
 			add_filter( 'plugins_url', 'domain_mapping_plugins_uri', 1 );
