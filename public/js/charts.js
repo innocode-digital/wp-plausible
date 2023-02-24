@@ -29,7 +29,7 @@
 
             const { url } = chart.data.datasets[0].data[active[0].index];
 
-            if (url !== null) {
+            if (typeof url !== 'undefined' && url !== null) {
               window.open(url, '_blank').focus();
             }
           },

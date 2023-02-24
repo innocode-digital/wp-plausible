@@ -18,6 +18,9 @@ use WPD\Statistics;
 
 define( 'INNSTATS_FILE', __FILE__ );
 define( 'INNSTATS_VERSION', '1.0.0' );
+// @TODO: test
+define( 'PLAUSIBLE_API_ROOT', 'https://statistics.innocode.digital' );
+define( 'PLAUSIBLE_API_KEY', '3EyTToPWPwya4xBeFJ1zgvd9qXCSgFdumOORxFTrPzYGkR06fUdrOYQZxZcDPHVH' );
 
 $GLOBALS['innstats'] = new Statistics\Plugin(
 	[

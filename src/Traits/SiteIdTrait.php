@@ -11,6 +11,6 @@ trait SiteIdTrait {
 		$home_url = wp_parse_url( home_url() );
 		$path     = $home_url['path'] ?? '';
 
-		return "{$home_url['host']}$path";
+		return 'brodogkorn.no';// "{$home_url['host']}$path";
 	}
 }

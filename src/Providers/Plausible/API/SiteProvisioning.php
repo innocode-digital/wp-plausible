@@ -2,14 +2,14 @@
 
 namespace WPD\Statistics\Providers\Plausible\API;
 
+use Requests;
+use WP_Http;
 use WPD\Statistics\Abstracts\AbstractEndpoint;
 use WPD\Statistics\Providers\Plausible\Entities\Goal;
 use WPD\Statistics\Providers\Plausible\Entities\SharedLink;
 use WPD\Statistics\Providers\Plausible\Entities\Site;
 use WPD\Statistics\Providers\Plausible\Entities\Status;
 use WPD\Statistics\Traits\BearerTokenTrait;
-use Requests;
-use WP_Http;
 
 class SiteProvisioning extends AbstractEndpoint {
 

@@ -2,6 +2,7 @@
 
 namespace WPD\Statistics;
 
+use WPD\Statistics\Tables\GoalsTable;
 use WPD\Statistics\Traits\ViewsTrait;
 
 final class Admin {
@@ -31,6 +32,7 @@ final class Admin {
 	public function run() {
 		add_action( 'admin_menu', [ $this, 'add_pages' ] );
 		add_action( 'admin_init', [ $this, 'init' ] );
+		add_action( 'wp_ajax_innstats_admin_goals', [ $this, 'goals_ajax' ] );
 	}
 
 	/**
@@ -90,67 +92,9 @@ final class Admin {
 			if ( method_exists( $this, "enqueue_{$page}_scripts" ) ) {
 				add_action( "admin_print_scripts-$hook_suffix", [ $this, "enqueue_{$page}_scripts" ] );
 			}
+
+			add_action( "innstats_admin_page_$page", [ $this, "page_$page" ] );
 		}
-
-		add_action(
-			'innstats_admin_page_' . self::PAGE_GENERAL,
-			function () {
-				// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
-				echo $this->section(
-					'general',
-					__( 'General', 'innstats' ),
-					[
-						'misc',
-						'country',
-						'timeseries',
-						'bounce_rate',
-						'visit_duration',
-					]
-				);
-
-				// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
-				echo $this->section(
-					'top_pages',
-					__( 'Top Pages', 'innstats' ),
-					[
-						'page',
-						'entry_page',
-						'exit_page',
-					]
-				);
-
-				// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
-				echo $this->section(
-					'top_sources',
-					__( 'Top Sources', 'innstats' ),
-					[
-						'source',
-						'utm_medium',
-						'utm_source',
-						'utm_campaign',
-						'utm_term',
-						'utm_content',
-					]
-				);
-
-				// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
-				echo $this->section(
-					'devices_and_browsers',
-					__( 'Devices & Browsers', 'innstats' ),
-					[
-						'device',
-						'browser',
-						'os',
-						'device_pixel_ratio',
-						'language',
-						'ad_blocker',
-					]
-				);
-			}
-		);
-
-		add_action( 'innstats_admin_page_' . self::PAGE_POPULARITY, [ $this, 'widgets_popularity' ] );
-		add_action( 'innstats_admin_page_' . self::PAGE_NOT_FOUND_PAGES, [ $this, 'widget_not_found_pages' ] );
 	}
 
 	/**
@@ -160,6 +104,18 @@ final class Admin {
 		wp_enqueue_style(
 			'innstats-pages-dashboard',
 			Plugin::url( 'pages/dashboard', 'css' ),
+			[],
+			INNSTATS_VERSION
+		);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_not_found_pages_styles(): void {
+		wp_enqueue_style(
+			'innstats-pages-goals',
+			Plugin::url( 'pages/goals', 'css' ),
 			[],
 			INNSTATS_VERSION
 		);
@@ -228,6 +184,19 @@ final class Admin {
 	}
 
 	/**
+	 * @return void
+	 */
+	public function enqueue_not_found_pages_scripts(): void {
+		wp_enqueue_script(
+			'innstats-pages-goals',
+			Plugin::url( 'pages/goals' ),
+			[ 'jquery', 'wp-dom-ready', 'wp-lists', 'innstats-api' ],
+			INNSTATS_VERSION,
+			true
+		);
+	}
+
+	/**
 	 * @param string $name
 	 * @param string $title
 	 * @param array  $widgets
@@ -266,15 +235,128 @@ final class Admin {
 	/**
 	 * @return void
 	 */
-	public function widgets_popularity(): void {
-		$post_types = get_post_types( [ 'public' => true ], 'objects' );
-		$taxonomies = get_taxonomies( [ 'public' => true ], 'objects' );
+	public function page_general(): void {
+		// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
+		echo $this->section(
+			'general',
+			__( 'General', 'innstats' ),
+			[
+				'misc',
+				'country',
+				'timeseries',
+				'bounce_rate',
+				'visit_duration',
+			]
+		);
+
+		// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
+		echo $this->section(
+			'top_pages',
+			__( 'Top Pages', 'innstats' ),
+			[
+				'page',
+				'entry_page',
+				'exit_page',
+			]
+		);
+
+		// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
+		echo $this->section(
+			'top_sources',
+			__( 'Top Sources', 'innstats' ),
+			[
+				'source',
+				'utm_medium',
+				'utm_source',
+				'utm_campaign',
+				'utm_term',
+				'utm_content',
+			]
+		);
+
+		// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
+		echo $this->section(
+			'devices_and_browsers',
+			__( 'Devices & Browsers', 'innstats' ),
+			[
+				'device',
+				'browser',
+				'os',
+				'device_pixel_ratio',
+				'language',
+				'ad_blocker',
+			]
+		);
 	}
 
 	/**
 	 * @return void
 	 */
-	public function widget_not_found_pages(): void {
-		$this->widget( 'not_found_pages' );
+	public function page_popularity(): void {
+		$post_types = get_post_types( [ 'public' => true ], 'objects' );
+		$taxonomies = get_taxonomies( [ 'public' => true ], 'objects' );
+
+		printf(
+			'<p>%s</p>',
+			esc_html__( 'Coming soon.', 'innstats' )
+		);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function page_not_found_pages(): void {
+		if ( ! class_exists( 'WP_List_Table' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+		}
+
+		$table = new GoalsTable();
+		$table->prepare_items();
+
+		echo '<form id="innstats-table-goals" method="get">';
+
+		$table->search_box( __( 'Search Pages', 'innstats' ), 'not_found_pages' );
+		$table->search_help();
+		$table->display();
+
+		echo '</form>';
+	}
+
+	/**
+	 * @return void
+	 */
+	public function page_conversions(): void {
+		printf(
+			'<h2>%s</h2><p>%s</p>',
+			esc_html__( 'It\'s not available yet', 'innstats' ),
+			esc_html__( 'The metrics you\'re looking for aren\'t associated with your site. If you\'re interesting in such functionality like measuring of how many people visit a specific section of your site then feel free to contact your development team or hosting provider.', 'innstats' )
+		);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function goals_ajax(): void {
+		if ( ! isset( $_GET['list_args']['class'], $_GET['list_args']['screen']['id'], $_GET['list_args']['screen']['base'] ) ) {
+			wp_die( 0 );
+		}
+
+		$list_class = $_GET['list_args']['class'];
+
+		check_ajax_referer( "fetch-list-$list_class", '_ajax_fetch_list_nonce' );
+
+		$table = new GoalsTable(
+			[
+				'screen' => $_GET['list_args']['screen']['id'],
+			]
+		);
+
+		if ( ! $table->ajax_user_can() ) {
+			wp_die( -1 );
+		}
+
+		$table->ajax_response();
+
+		wp_die( 0 );
 	}
 }

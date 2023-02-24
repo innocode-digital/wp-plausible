@@ -2,6 +2,8 @@
 
 namespace WPD\Statistics\Providers\Plausible\API;
 
+use Requests;
+use WP_Http;
 use WPD\Statistics\Abstracts\AbstractEndpoint;
 use WPD\Statistics\Providers\Plausible\Entities\Breakdown;
 use WPD\Statistics\Providers\Plausible\Entities\Metric;
@@ -9,8 +11,6 @@ use WPD\Statistics\Providers\Plausible\Entities\Metrics;
 use WPD\Statistics\Providers\Plausible\Entities\Timeseries;
 use WPD\Statistics\Traits\BearerTokenTrait;
 use WPD\Statistics\Traits\SiteIdTrait;
-use Requests;
-use WP_Http;
 
 class Stats extends AbstractEndpoint {
 

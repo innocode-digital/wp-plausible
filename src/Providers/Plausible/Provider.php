@@ -105,14 +105,23 @@ class Provider extends AbstractProvider {
 			$event .= ":$type";
 		}
 
+		$filters = "event:name==$event";
+
+		if ( isset( $query['search'] ) ) {
+			$filters .= ";event:page=={$query['search']}";
+
+			unset( $query['search'] );
+		}
+
 		$data = $this->get_api()->get_stats()->breakdown(
 			wp_parse_args(
 				$query,
 				[
 					'property' => 'event:props:id',
 					'period'   => '7d',
+					'metrics'  => [ 'visitors', 'events' ],
 					'limit'    => get_option( 'posts_per_page' ),
-					'filters'  => "event:name==$event",
+					'filters'  => $filters,
 				]
 			)
 		);

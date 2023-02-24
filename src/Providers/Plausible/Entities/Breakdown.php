@@ -508,7 +508,7 @@ class Breakdown extends AbstractEntity {
 	 * @return int
 	 */
 	public function get_events(): int {
-		return $this->visits;
+		return $this->events;
 	}
 
 	/**

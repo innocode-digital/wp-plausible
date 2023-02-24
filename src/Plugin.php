@@ -2,12 +2,12 @@
 
 namespace WPD\Statistics;
 
-use WPD\Statistics\Abstracts\AbstractProvider;
-use WPD\Statistics\Providers\Plausible;
-use WPD\Statistics\Traits\SiteIdTrait;
 use Innocode\Version\Version;
 use WP_Http;
 use WP_Term;
+use WPD\Statistics\Abstracts\AbstractProvider;
+use WPD\Statistics\Providers\Plausible;
+use WPD\Statistics\Traits\SiteIdTrait;
 
 final class Plugin {
 

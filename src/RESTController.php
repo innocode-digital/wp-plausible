@@ -2,13 +2,13 @@
 
 namespace WPD\Statistics;
 
-use WPD\Statistics\Providers\Plausible\Entities\Breakdown;
-use WPD\Statistics\Providers\Plausible\Entities\Timeseries;
 use WP_Error;
 use WP_Http;
 use WP_REST_Controller;
 use WP_REST_Request;
 use WP_REST_Server;
+use WPD\Statistics\Providers\Plausible\Entities\Breakdown;
+use WPD\Statistics\Providers\Plausible\Entities\Timeseries;
 
 class RESTController extends WP_REST_Controller {
 

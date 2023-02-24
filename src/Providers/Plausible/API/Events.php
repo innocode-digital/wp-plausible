@@ -2,9 +2,9 @@
 
 namespace WPD\Statistics\Providers\Plausible\API;
 
+use Requests;
 use WPD\Statistics\Abstracts\AbstractEndpoint;
 use WPD\Statistics\Providers\Plausible\Entities\Event;
-use Requests;
 
 class Events extends AbstractEndpoint {
 
