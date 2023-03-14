@@ -2,6 +2,8 @@
 
 namespace WPD\Statistics;
 
+use WP_Post_Type;
+use WP_Taxonomy;
 use WPD\Statistics\Tables\GoalsTable;
 use WPD\Statistics\Traits\ViewsTrait;
 
@@ -112,13 +114,27 @@ final class Admin {
 	/**
 	 * @return void
 	 */
-	public function enqueue_not_found_pages_styles(): void {
+	protected function enqueue_goals_styles(): void {
 		wp_enqueue_style(
 			'innstats-pages-goals',
 			Plugin::url( 'pages/goals', 'css' ),
 			[],
 			INNSTATS_VERSION
 		);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_popularity_styles(): void {
+		$this->enqueue_goals_styles();
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_not_found_pages_styles(): void {
+		$this->enqueue_goals_styles();
 	}
 
 	/**
@@ -186,7 +202,7 @@ final class Admin {
 	/**
 	 * @return void
 	 */
-	public function enqueue_not_found_pages_scripts(): void {
+	protected function enqueue_goals_scripts(): void {
 		wp_enqueue_script(
 			'innstats-pages-goals',
 			Plugin::url( 'pages/goals' ),
@@ -194,6 +210,20 @@ final class Admin {
 			INNSTATS_VERSION,
 			true
 		);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_popularity_scripts(): void {
+		$this->enqueue_goals_scripts();
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_not_found_pages_scripts(): void {
+		$this->enqueue_goals_scripts();
 	}
 
 	/**
@@ -293,13 +323,89 @@ final class Admin {
 	 * @return void
 	 */
 	public function page_popularity(): void {
+		if ( ! class_exists( 'WP_List_Table' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+		}
+
 		$post_types = get_post_types( [ 'public' => true ], 'objects' );
 		$taxonomies = get_taxonomies( [ 'public' => true ], 'objects' );
 
-		printf(
-			'<p>%s</p>',
-			esc_html__( 'Coming soon.', 'innstats' )
+		$tabs = array_values(
+			apply_filters(
+				'innstats_popularity_tabs',
+				array_merge(
+					array_map(
+						function ( $post_type ) {
+							return [ "post_type-$post_type->name", $post_type ];
+						},
+						$post_types
+					),
+					array_map(
+						function ( $taxonomy ) {
+							return [ "taxonomy-$taxonomy->name", $taxonomy ];
+						},
+						$taxonomies
+					)
+				)
+			)
 		);
+
+		if ( empty( $tabs ) ) {
+			printf(
+				'<p>%s</p>',
+				esc_html__( 'No public post types or taxonomies found.', 'innstats' )
+			);
+
+			return;
+		}
+
+		echo '<nav class="nav-tab-wrapper">';
+
+		$menu_page_url = menu_page_url( 'innstats-' . self::PAGE_POPULARITY, false );
+		$active_tab    = isset( $_GET['tab'] ) && in_array( $_GET['tab'], array_column( $tabs, 0 ), true )
+			? $_GET['tab']
+			: $tabs[0][0];
+
+		foreach ( $tabs as $tab ) {
+			list( $tab, $object ) = $tab;
+
+			printf(
+				'<a href="%s" class="nav-tab %s">%s</a>',
+				esc_url( add_query_arg( 'tab', $tab, $menu_page_url ) ),
+				$active_tab === $tab ? 'nav-tab-active' : '',
+				esc_html( $object->label )
+			);
+		}
+
+		echo '</nav>';
+
+		foreach ( $tabs as $tab ) {
+			list( $tab, $object ) = $tab;
+
+			if ( $tab === $active_tab ) {
+				$table = new GoalsTable();
+
+				if ( $object instanceof WP_Post_Type ) {
+					$table->set_api_method( 'popular_posts' );
+				} elseif ( $object instanceof WP_Taxonomy ) {
+					$table->set_api_method( 'popular_terms' );
+				}
+
+				$table->set_type( $object->name );
+				$table->set_label( $object->labels->singular_name );
+				$table->prepare_items();
+
+				echo '<form id="innstats-table-goals" method="get">';
+
+				$table->search_box( $object->labels->search_items, 'goals' );
+				$table->search_help();
+				$table->display();
+
+				echo '</form>';
+
+				break;
+			}
+		}
 	}
 
 	/**
@@ -311,11 +417,12 @@ final class Admin {
 		}
 
 		$table = new GoalsTable();
+		$table->set_api_method( 'not_found_pages' );
 		$table->prepare_items();
 
 		echo '<form id="innstats-table-goals" method="get">';
 
-		$table->search_box( __( 'Search Pages', 'innstats' ), 'not_found_pages' );
+		$table->search_box( __( 'Search Pages', 'innstats' ), 'goals' );
 		$table->search_help();
 		$table->display();
 
@@ -337,19 +444,24 @@ final class Admin {
 	 * @return void
 	 */
 	public function goals_ajax(): void {
-		if ( ! isset( $_GET['list_args']['class'], $_GET['list_args']['screen']['id'], $_GET['list_args']['screen']['base'] ) ) {
+		$list_args = $_GET['list_args'] ?? [];
+
+		if ( ! isset( $list_args['class'], $list_args['screen']['id'], $list_args['screen']['base'], $list_args['api_method'] ) ) {
 			wp_die( 0 );
 		}
 
-		$list_class = $_GET['list_args']['class'];
-
-		check_ajax_referer( "fetch-list-$list_class", '_ajax_fetch_list_nonce' );
+		check_ajax_referer( "fetch-list-{$list_args['class']}", '_ajax_fetch_list_nonce' );
 
 		$table = new GoalsTable(
 			[
-				'screen' => $_GET['list_args']['screen']['id'],
+				'screen' => $list_args['screen']['id'],
 			]
 		);
+		$table->set_api_method( $list_args['api_method'] );
+
+		if ( isset( $list_args['type'] ) ) {
+			$table->set_type( $list_args['type'] );
+		}
 
 		if ( ! $table->ajax_user_can() ) {
 			wp_die( -1 );

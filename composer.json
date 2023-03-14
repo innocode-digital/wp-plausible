@@ -22,7 +22,7 @@
     }
   ],
   "require": {
-    "php": ">=7.1",
+    "php": ">=7.3",
     "ext-json": "*",
     "innocode-digital/wp-version": "^1.0"
   },

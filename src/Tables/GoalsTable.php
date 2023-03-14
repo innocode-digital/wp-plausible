@@ -9,6 +9,19 @@ use WPD\Statistics\Providers\Plausible\Entities\Breakdown;
 class GoalsTable extends WP_List_Table {
 
 	/**
+	 * @var string
+	 */
+	protected $label;
+	/**
+	 * @var string
+	 */
+	protected $api_method;
+	/**
+	 * @var string
+	 */
+	protected $type;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param array $args
@@ -24,6 +37,56 @@ class GoalsTable extends WP_List_Table {
 				]
 			)
 		);
+
+		$this->set_label( __( 'Page', 'innstats' ) );
+	}
+
+	/**
+	 * @param string $label
+	 *
+	 * @return void
+	 */
+	public function set_label( string $label ): void {
+		$this->label = $label;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_label(): string {
+		return $this->label;
+	}
+
+	/**
+	 * @param string $api_method
+	 *
+	 * @return void
+	 */
+	public function set_api_method( string $api_method ): void {
+		$this->api_method = $api_method;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_api_method(): string {
+		return $this->api_method;
+	}
+
+	/**
+	 * @param string $type
+	 *
+	 * @return void
+	 */
+	public function set_type( string $type ): void {
+		$this->type = $type;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_type(): string {
+		return $this->type;
 	}
 
 	/**
@@ -38,7 +101,7 @@ class GoalsTable extends WP_List_Table {
 	 */
 	public function get_columns(): array {
 		return [
-			'page'     => __( 'Page', 'innstats' ),
+			'page'     => $this->get_label(),
 			'visitors' => __( 'Unique visitors', 'innstats' ),
 			'events'   => __( 'Total', 'innstats' ),
 			'conv'     => __( 'Conversion rate', 'innstats' ),
@@ -50,9 +113,22 @@ class GoalsTable extends WP_List_Table {
 	 * @return string
 	 */
 	public function column_page( array $item ): string {
-		return $item['page'] === 'spinner' ? '<span class="spinner"></span>' : sprintf(
+		if ( $item['page'] === 'spinner' ) {
+			return '<span class="spinner"></span>';
+		}
+
+		$path             = $item['page'];
+		$home_url         = rtrim( home_url(), '/' );
+		$home_path        = parse_url( $home_url, PHP_URL_PATH );
+		$home_path_length = strlen( $home_path );
+
+		if ( $home_path !== null && substr( $path, 0, $home_path_length ) === $home_path ) {
+			$path = substr( $path, $home_path_length );
+		}
+
+		return sprintf(
 			'<a href="%s" target="_blank">%s</a>',
-			home_url( $item['page'] ),
+			home_url( $path ),
 			$item['page']
 		);
 	}
@@ -119,7 +195,28 @@ class GoalsTable extends WP_List_Table {
 			return [];
 		}
 
-		$aggregate = $api->get_api()->get_stats()->aggregate();
+		$aggregate  = $api->get_api()->get_stats()->aggregate();
+		$api_method = $this->get_api_method();
+
+		if ( ! $api_method || ! method_exists( $api, $api_method ) ) {
+			return [];
+		}
+
+		$type      = $this->get_type();
+		$breakdown = $type ? $api->{$api_method}(
+			$type,
+			[
+				'limit'  => $per_page,
+				'page'   => $page,
+				'search' => $search,
+			]
+		) : $api->{$api_method}(
+			[
+				'limit'  => $per_page,
+				'page'   => $page,
+				'search' => $search,
+			]
+		);
 
 		return array_map(
 			function ( Breakdown $item ) use ( $aggregate ) {
@@ -130,14 +227,7 @@ class GoalsTable extends WP_List_Table {
 					$item->to_array()
 				);
 			},
-			// @TODO: make it dynamic to handle all methods
-			$api->not_found_pages(
-				[
-					'limit'  => $per_page,
-					'page'   => $page,
-					'search' => $search,
-				]
-			)
+			$breakdown
 		);
 	}
 
@@ -189,5 +279,26 @@ class GoalsTable extends WP_List_Table {
 	 */
 	public static function get_class(): string {
 		return str_replace( '\\', '', self::class );
+	}
+
+	/**
+	 * @return void
+	 */
+	public function _js_vars(): void { // phpcs:ignore PSR2.Methods.MethodDeclaration.Underscore
+		parent::_js_vars();
+
+		printf(
+			"<script>list_args.api_method = %s;</script>\n",
+			wp_json_encode( $this->get_api_method() )
+		);
+
+		$type = $this->get_type();
+
+		if ( $type ) {
+			printf(
+				"<script>list_args.type = %s;</script>\n",
+				wp_json_encode( $type )
+			);
+		}
 	}
 }
