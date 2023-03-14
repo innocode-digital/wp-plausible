@@ -68,20 +68,14 @@ class Provider extends AbstractProvider {
 	}
 
 	/**
-	 * @param array $query
-	 * @return Entities\Breakdown[]
+	 * @param string $prefix
+	 * @param array  $query
+	 *
+	 * @return array
 	 */
-	public function popular_urls( array $query = [] ): array {
-		$query     = wp_parse_args(
-			$query,
-			[
-				'property' => 'event:page',
-				'period'   => '7d',
-				'limit'    => get_option( 'posts_per_page' ),
-			]
-		);
+	protected function breakdown( string $prefix, array $query = [] ): array {
 		$key       = md5( wp_json_encode( $query ) );
-		$cache_key = "innstats-popular_urls-$key";
+		$cache_key = "innstats-$prefix-$key";
 		$data      = get_transient( $cache_key );
 
 		if ( false !== $data ) {
@@ -99,6 +93,24 @@ class Provider extends AbstractProvider {
 		set_transient( $cache_key, $data, HOUR_IN_SECONDS );
 
 		return $data;
+	}
+
+	/**
+	 * @param array $query
+	 * @return Entities\Breakdown[]
+	 */
+	public function popular_urls( array $query = [] ): array {
+		return $this->breakdown(
+			'popular_urls',
+			wp_parse_args(
+				$query,
+				[
+					'property' => 'event:page',
+					'period'   => '7d',
+					'limit'    => get_option( 'posts_per_page' ),
+				]
+			)
+		);
 	}
 
 	/**
@@ -122,24 +134,8 @@ class Provider extends AbstractProvider {
 			unset( $query['search'] );
 		}
 
-		$query     = wp_parse_args(
-			$query,
-			[
-				'property' => 'event:page',
-				'period'   => '7d',
-				'limit'    => get_option( 'posts_per_page' ),
-				'filters'  => $filters,
-			]
-		);
-		$key       = md5( wp_json_encode( $query ) );
-		$cache_key = "innstats-popular_data-$key";
-		$data      = get_transient( $cache_key );
-
-		if ( false !== $data ) {
-			return $data;
-		}
-
-		$data = $this->get_api()->get_stats()->breakdown(
+		return $this->breakdown(
+			'popular_data',
 			wp_parse_args(
 				$query,
 				[
@@ -151,16 +147,6 @@ class Provider extends AbstractProvider {
 				]
 			)
 		);
-
-		if ( is_wp_error( $data ) ) {
-			error_log( $data->get_error_message() );
-
-			$data = [];
-		}
-
-		set_transient( $cache_key, $data, HOUR_IN_SECONDS );
-
-		return $data;
 	}
 
 	/**
