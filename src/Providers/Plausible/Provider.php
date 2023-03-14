@@ -72,22 +72,31 @@ class Provider extends AbstractProvider {
 	 * @return Entities\Breakdown[]
 	 */
 	public function popular_urls( array $query = [] ): array {
-		$data = $this->get_api()->get_stats()->breakdown(
-			wp_parse_args(
-				$query,
-				[
-					'property' => 'event:page',
-					'period'   => '7d',
-					'limit'    => get_option( 'posts_per_page' ),
-				]
-			)
+		$query     = wp_parse_args(
+			$query,
+			[
+				'property' => 'event:page',
+				'period'   => '7d',
+				'limit'    => get_option( 'posts_per_page' ),
+			]
 		);
+		$key       = md5( wp_json_encode( $query ) );
+		$cache_key = "innstats-popular_urls-$key";
+		$data      = get_transient( $cache_key );
+
+		if ( false !== $data ) {
+			return $data;
+		}
+
+		$data = $this->get_api()->get_stats()->breakdown( $query );
 
 		if ( is_wp_error( $data ) ) {
 			error_log( $data->get_error_message() );
 
-			return [];
+			$data = [];
 		}
+
+		set_transient( $cache_key, $data, HOUR_IN_SECONDS );
 
 		return $data;
 	}
@@ -113,6 +122,23 @@ class Provider extends AbstractProvider {
 			unset( $query['search'] );
 		}
 
+		$query     = wp_parse_args(
+			$query,
+			[
+				'property' => 'event:page',
+				'period'   => '7d',
+				'limit'    => get_option( 'posts_per_page' ),
+				'filters'  => $filters,
+			]
+		);
+		$key       = md5( wp_json_encode( $query ) );
+		$cache_key = "innstats-popular_data-$key";
+		$data      = get_transient( $cache_key );
+
+		if ( false !== $data ) {
+			return $data;
+		}
+
 		$data = $this->get_api()->get_stats()->breakdown(
 			wp_parse_args(
 				$query,
@@ -129,8 +155,10 @@ class Provider extends AbstractProvider {
 		if ( is_wp_error( $data ) ) {
 			error_log( $data->get_error_message() );
 
-			return [];
+			$data = [];
 		}
+
+		set_transient( $cache_key, $data, HOUR_IN_SECONDS );
 
 		return $data;
 	}
