@@ -83,9 +83,9 @@ class GoalsTable extends WP_List_Table {
 	}
 
 	/**
-	 * @return string
+	 * @return string|null
 	 */
-	public function get_type(): string {
+	public function get_type(): ?string {
 		return $this->type;
 	}
 

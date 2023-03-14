@@ -39,12 +39,13 @@ final class Helpers {
 	public static function get_posts_by_ids( array $ids ): array {
 		$query = new WP_Query(
 			[
-				'no_found_rows'  => true,
-				'orderby'        => 'post__in',
-				'order'          => 'ASC',
-				'post__in'       => self::query_in_array( $ids ),
-				'post_type'      => 'any',
-				'posts_per_page' => self::query_per_page( $ids ),
+				'ignore_sticky_posts' => true,
+				'no_found_rows'       => true,
+				'orderby'             => 'post__in',
+				'order'               => 'ASC',
+				'post__in'            => self::query_in_array( $ids ),
+				'post_type'           => 'any',
+				'posts_per_page'      => self::query_per_page( $ids ),
 			]
 		);
 
