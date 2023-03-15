@@ -218,12 +218,21 @@ class GoalsTable extends WP_List_Table {
 	 *
 	 * @return string
 	 */
-	public function column_author( array $item ): string {
+	public function column_user( array $item ): string {
 		if ( $item['user'] === 'spinner' ) {
 			return $this->column_spinner();
 		}
 
-		return '';
+		$user = get_userdata( $item['user'] );
+
+		if ( ! $user ) {
+			return '';
+		}
+
+		return sprintf(
+			'<strong class="row-title">%s</strong>',
+			$user->display_name
+		);
 	}
 
 	/**
@@ -267,6 +276,10 @@ class GoalsTable extends WP_List_Table {
 			return $this->handle_term_row_actions( $item, $column_name, $primary );
 		}
 
+		if ( $column_name === 'user' ) {
+			return $this->handle_user_row_actions( $item, $column_name, $primary );
+		}
+
 		return parent::handle_row_actions( $item, $column_name, $primary );
 	}
 
@@ -278,7 +291,7 @@ class GoalsTable extends WP_List_Table {
 	 * @return string
 	 */
 	protected function handle_page_row_actions( array $item, string $column_name, string $primary ): string {
-		if ( ! is_string( $item['page'] ) ) {
+		if ( ! is_string( $item['page'] ) || $item['page'] === 'spinner' ) {
 			return parent::handle_row_actions( $item, $column_name, $primary );
 		}
 
@@ -311,6 +324,10 @@ class GoalsTable extends WP_List_Table {
 	 * @return string
 	 */
 	protected function handle_post_row_actions( array $item, string $column_name, string $primary ): string {
+		if ( ! is_numeric( $item['post'] ) || $item['post'] === 'spinner' ) {
+			return parent::handle_row_actions( $item, $column_name, $primary );
+		}
+
 		$post = get_post( $item['post'] );
 
 		if ( ! $post ) {
@@ -369,6 +386,10 @@ class GoalsTable extends WP_List_Table {
 	 * @return string
 	 */
 	protected function handle_term_row_actions( array $item, string $column_name, string $primary ): string {
+		if ( ! is_numeric( $item['term'] ) || $item['term'] === 'spinner' ) {
+			return parent::handle_row_actions( $item, $column_name, $primary );
+		}
+
 		$term = get_term_by( 'term_taxonomy_id', $item['term'] );
 
 		if ( ! $term ) {
@@ -402,6 +423,60 @@ class GoalsTable extends WP_List_Table {
 				get_term_link( $term ),
 				/* translators: %s: Taxonomy term name. */
 				esc_attr( sprintf( __( 'View &#8220;%s&#8221; archive' ), $term->name ) ),
+				__( 'View' )
+			);
+		}
+
+		return $this->row_actions( $actions );
+	}
+
+	/**
+	 * @param array  $item
+	 * @param string $column_name
+	 * @param string $primary
+	 *
+	 * @return string
+	 */
+	protected function handle_user_row_actions( array $item, string $column_name, string $primary ): string {
+		if ( ! is_numeric( $item['user'] ) || $item['user'] === 'spinner' ) {
+			return parent::handle_row_actions( $item, $column_name, $primary );
+		}
+
+		$user = get_userdata( $item['user'] );
+
+		if ( ! $user ) {
+			return parent::handle_row_actions( $item, $column_name, $primary );
+		}
+
+		$actions = [
+			/* translators: %s: User ID. */
+			'id' => sprintf( __( 'ID: %d', 'innstats' ), $user->ID ),
+		];
+
+		if ( current_user_can( 'edit_user', $user->ID ) ) {
+			$actions['edit'] = sprintf(
+				'<a href="%s" aria-label="%s">%s</a>',
+				esc_url(
+					add_query_arg(
+						'wp_http_referer',
+						rawurlencode( wp_unslash( $_SERVER['REQUEST_URI'] ) ),
+						get_edit_user_link( $user->ID )
+					)
+				),
+				/* translators: %s: User name. */
+				esc_attr( sprintf( __( 'Edit &#8220;%s&#8221;' ), $user->display_name ) ),
+				__( 'Edit' )
+			);
+		}
+
+		$author_posts_url = get_author_posts_url( $user->ID );
+
+		if ( $author_posts_url ) {
+			$actions['view'] = sprintf(
+				'<a href="%s" aria-label="%s">%s</a>',
+				esc_url( $author_posts_url ),
+				/* translators: %s: Author's display name. */
+				esc_attr( sprintf( __( 'View posts by %s' ), $user->display_name ) ),
 				__( 'View' )
 			);
 		}

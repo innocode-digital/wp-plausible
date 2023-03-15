@@ -2,8 +2,6 @@
 
 namespace WPD\Statistics;
 
-use WP_Post_Type;
-use WP_Taxonomy;
 use WPD\Statistics\Tables\GoalsTable;
 use WPD\Statistics\Traits\ViewsTrait;
 
@@ -12,7 +10,9 @@ final class Admin {
 	use ViewsTrait;
 
 	const PAGE_GENERAL         = 'general';
-	const PAGE_POPULARITY      = 'popularity';
+	const PAGE_POPULAR_POSTS   = 'popular_posts';
+	const PAGE_POPULAR_TERMS   = 'popular_terms';
+	const PAGE_POPULAR_USERS   = 'popular_users';
 	const PAGE_NOT_FOUND_PAGES = 'not_found_pages';
 	const PAGE_CONVERSIONS     = 'conversions';
 
@@ -54,7 +54,9 @@ final class Admin {
 		);
 
 		foreach ( [
-			self::PAGE_POPULARITY      => __( 'Popularity', 'innstats' ),
+			self::PAGE_POPULAR_POSTS   => __( 'Popular Posts', 'innstats' ),
+			self::PAGE_POPULAR_TERMS   => __( 'Popular Terms', 'innstats' ),
+			self::PAGE_POPULAR_USERS   => __( 'Popular Users', 'innstats' ),
 			self::PAGE_NOT_FOUND_PAGES => __( 'Not Found Pages', 'innstats' ),
 			self::PAGE_CONVERSIONS     => __( 'Conversions', 'innstats' ),
 		] as $name => $title ) {
@@ -126,7 +128,21 @@ final class Admin {
 	/**
 	 * @return void
 	 */
-	public function enqueue_popularity_styles(): void {
+	public function enqueue_popular_posts_styles(): void {
+		$this->enqueue_goals_styles();
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_popular_terms_styles(): void {
+		$this->enqueue_goals_styles();
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_popular_users_styles(): void {
 		$this->enqueue_goals_styles();
 	}
 
@@ -215,7 +231,21 @@ final class Admin {
 	/**
 	 * @return void
 	 */
-	public function enqueue_popularity_scripts(): void {
+	public function enqueue_popular_posts_scripts(): void {
+		$this->enqueue_goals_scripts();
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_popular_terms_scripts(): void {
+		$this->enqueue_goals_scripts();
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_popular_users_scripts(): void {
 		$this->enqueue_goals_scripts();
 	}
 
@@ -320,48 +350,17 @@ final class Admin {
 	}
 
 	/**
+	 * @param array  $tabs
+	 * @param string $page
+	 * @param string $primary_column
+	 * @param string $api_method
+	 *
 	 * @return void
 	 */
-	public function page_popularity(): void {
-		if ( ! class_exists( 'WP_List_Table' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
-		}
-
-		$post_types = get_post_types( [], 'objects' );
-		$taxonomies = get_taxonomies( [], 'objects' );
-
-		$tabs = array_values(
-			apply_filters(
-				'innstats_popularity_tabs',
-				array_merge(
-					array_map(
-						function ( $post_type ) {
-							return [ "post_type-$post_type->name", $post_type ];
-						},
-						array_filter( $post_types, 'is_post_type_viewable' )
-					),
-					array_map(
-						function ( $taxonomy ) {
-							return [ "taxonomy-$taxonomy->name", $taxonomy ];
-						},
-						array_filter( $taxonomies, 'is_taxonomy_viewable' )
-					)
-				)
-			)
-		);
-
-		if ( empty( $tabs ) ) {
-			printf(
-				'<p>%s</p>',
-				esc_html__( 'No public post types or taxonomies found.', 'innstats' )
-			);
-
-			return;
-		}
-
+	protected function tabs_popular( array $tabs, string $page, string $primary_column, string $api_method ): void {
 		echo '<nav class="nav-tab-wrapper">';
 
-		$menu_page_url = menu_page_url( 'innstats-' . self::PAGE_POPULARITY, false );
+		$menu_page_url = menu_page_url( "innstats-$page", false );
 		$active_tab    = isset( $_GET['tab'] ) && in_array( $_GET['tab'], array_column( $tabs, 0 ), true )
 			? $_GET['tab']
 			: $tabs[0][0];
@@ -384,17 +383,10 @@ final class Admin {
 
 			if ( $tab === $active_tab ) {
 				$table = new GoalsTable();
-
-				if ( $object instanceof WP_Post_Type ) {
-					$table->set_primary_column( 'post' );
-					$table->set_api_method( 'popular_posts' );
-				} elseif ( $object instanceof WP_Taxonomy ) {
-					$table->set_primary_column( 'term' );
-					$table->set_api_method( 'popular_terms' );
-				}
-
-				$table->set_type( $object->name );
+				$table->set_primary_column( $primary_column );
 				$table->set_primary_label( $object->labels->singular_name );
+				$table->set_api_method( $api_method );
+				$table->set_type( $object->name );
 				$table->prepare_items();
 
 				echo '<form id="innstats-table-goals" method="get">';
@@ -417,6 +409,98 @@ final class Admin {
 				break;
 			}
 		}
+	}
+
+	/**
+	 * @return void
+	 */
+	public function page_popular_posts(): void {
+		if ( ! class_exists( 'WP_List_Table' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+		}
+
+		$tabs = array_values(
+			apply_filters(
+				'innstats_popular_post_types',
+				array_map(
+					function ( $post_type ) {
+						return [ "post_type-$post_type->name", $post_type ];
+					},
+					array_filter( get_post_types( [], 'objects' ), 'is_post_type_viewable' )
+				)
+			)
+		);
+
+		if ( empty( $tabs ) ) {
+			printf(
+				'<p>%s</p>',
+				esc_html__( 'No viewable post types found.', 'innstats' )
+			);
+
+			return;
+		}
+
+		$this->tabs_popular( $tabs, self::PAGE_POPULAR_POSTS, 'post', 'popular_posts' );
+	}
+
+	/**
+	 * @return void
+	 */
+	public function page_popular_terms(): void {
+		if ( ! class_exists( 'WP_List_Table' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+		}
+
+		$tabs = array_values(
+			apply_filters(
+				'innstats_popular_taxonomies',
+				array_map(
+					function ( $taxonomy ) {
+						return [ "taxonomy-$taxonomy->name", $taxonomy ];
+					},
+					array_filter( get_taxonomies( [], 'objects' ), 'is_taxonomy_viewable' )
+				)
+			)
+		);
+
+		if ( empty( $tabs ) ) {
+			printf(
+				'<p>%s</p>',
+				esc_html__( 'No viewable taxonomies found.', 'innstats' )
+			);
+
+			return;
+		}
+
+		$this->tabs_popular( $tabs, self::PAGE_POPULAR_TERMS, 'term', 'popular_terms' );
+	}
+
+	/**
+	 * @return void
+	 */
+	public function page_popular_users(): void {
+		if ( ! class_exists( 'WP_List_Table' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+		}
+
+		$table = new GoalsTable();
+		$table->set_primary_column( 'user' );
+		$table->set_primary_label( __( 'Name' ) );
+		$table->set_api_method( 'popular_authors' );
+		$table->prepare_items();
+
+		echo '<form id="innstats-table-goals" method="get">';
+
+		$table->search_box( __( 'Search Users' ), 'goals' );
+
+		printf(
+			'<p class="description">%s</p>',
+			__( 'Search by ID (identifier). Use ID of User which you want to find.', 'innstats' )
+		);
+
+		$table->display();
+
+		echo '</form>';
 	}
 
 	/**
