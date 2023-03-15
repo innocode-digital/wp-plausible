@@ -129,7 +129,7 @@ final class Helpers {
 	 *
 	 * @return int
 	 */
-	public static function term_id( WP_Term $term ): int {
+	public static function term_taxonomy_id( WP_Term $term ): int {
 		return $term->term_taxonomy_id;
 	}
 

@@ -68,14 +68,13 @@ class Provider extends AbstractProvider {
 	}
 
 	/**
-	 * @param string $prefix
+	 * @param string $cache_prefix
 	 * @param array  $query
-	 *
-	 * @return array
+	 * @return Entities\Breakdown[]
 	 */
-	protected function breakdown( string $prefix, array $query = [] ): array {
+	protected function breakdown( string $cache_prefix, array $query = [] ): array {
 		$key       = md5( wp_json_encode( $query ) );
-		$cache_key = "innstats-$prefix-$key";
+		$cache_key = "innstats-$cache_prefix-$key";
 		$data      = get_transient( $cache_key );
 
 		if ( false !== $data ) {
@@ -250,7 +249,7 @@ class Provider extends AbstractProvider {
 			Plugin::TEMPLATE_CATEGORY,
 			'',
 			[ 'WPD\Statistics\Helpers', 'get_terms_by_ids' ],
-			[ 'WPD\Statistics\Helpers', 'term_id' ],
+			[ 'WPD\Statistics\Helpers', 'term_taxonomy_id' ],
 			$query
 		);
 	}
@@ -264,7 +263,7 @@ class Provider extends AbstractProvider {
 			Plugin::TEMPLATE_TAG,
 			'',
 			[ 'WPD\Statistics\Helpers', 'get_terms_by_ids' ],
-			[ 'WPD\Statistics\Helpers', 'term_id' ],
+			[ 'WPD\Statistics\Helpers', 'term_taxonomy_id' ],
 			$query
 		);
 	}
@@ -279,7 +278,7 @@ class Provider extends AbstractProvider {
 			Plugin::TEMPLATE_TAX,
 			$taxonomy,
 			[ 'WPD\Statistics\Helpers', 'get_terms_by_ids' ],
-			[ 'WPD\Statistics\Helpers', 'term_id' ],
+			[ 'WPD\Statistics\Helpers', 'term_taxonomy_id' ],
 			$query
 		);
 	}

@@ -11,7 +11,11 @@ class GoalsTable extends WP_List_Table {
 	/**
 	 * @var string
 	 */
-	protected $label;
+	protected $primary_column = 'page';
+	/**
+	 * @var string
+	 */
+	protected $primary_label;
 	/**
 	 * @var string
 	 */
@@ -38,23 +42,39 @@ class GoalsTable extends WP_List_Table {
 			)
 		);
 
-		$this->set_label( __( 'Page', 'innstats' ) );
+		$this->set_primary_label( __( 'Page', 'innstats' ) );
 	}
 
 	/**
-	 * @param string $label
+	 * @param string $primary_column
 	 *
 	 * @return void
 	 */
-	public function set_label( string $label ): void {
-		$this->label = $label;
+	public function set_primary_column( string $primary_column ): void {
+		$this->primary_column = $primary_column;
 	}
 
 	/**
 	 * @return string
 	 */
-	public function get_label(): string {
-		return $this->label;
+	public function get_primary_column(): string {
+		return $this->primary_column;
+	}
+
+	/**
+	 * @param string $primary_label
+	 *
+	 * @return void
+	 */
+	public function set_primary_label( string $primary_label ): void {
+		$this->primary_label = $primary_label;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_primary_label(): string {
+		return $this->primary_label;
 	}
 
 	/**
@@ -101,11 +121,18 @@ class GoalsTable extends WP_List_Table {
 	 */
 	public function get_columns(): array {
 		return [
-			'page'     => $this->get_label(),
-			'visitors' => __( 'Unique visitors', 'innstats' ),
-			'events'   => __( 'Total', 'innstats' ),
-			'conv'     => __( 'Conversion rate', 'innstats' ),
+			$this->get_primary_column() => $this->get_primary_label(),
+			'visitors'                  => __( 'Unique visitors', 'innstats' ),
+			'events'                    => __( 'Total', 'innstats' ),
+			'conv'                      => __( 'Conversion rate', 'innstats' ),
 		];
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function column_spinner(): string {
+		return '<span class="spinner"></span>';
 	}
 
 	/**
@@ -114,7 +141,11 @@ class GoalsTable extends WP_List_Table {
 	 */
 	public function column_page( array $item ): string {
 		if ( $item['page'] === 'spinner' ) {
-			return '<span class="spinner"></span>';
+			return $this->column_spinner();
+		}
+
+		if ( ! is_string( $item['page'] ) ) {
+			return '';
 		}
 
 		$path             = $item['page'];
@@ -131,6 +162,74 @@ class GoalsTable extends WP_List_Table {
 			home_url( $path ),
 			$item['page']
 		);
+	}
+
+	/**
+	 * @param array $item
+	 *
+	 * @return string
+	 */
+	public function column_comment( array $item ): string {
+		if ( $item['comment_id'] === 'spinner' ) {
+			return $this->column_spinner();
+		}
+
+		return '';
+	}
+
+	/**
+	 * @param array $item
+	 *
+	 * @return string
+	 */
+	public function column_post( array $item ): string {
+		if ( $item['post'] === 'spinner' ) {
+			return $this->column_spinner();
+		}
+
+		$post = get_post( $item['post'] );
+
+		if ( ! $post ) {
+			return '';
+		}
+
+		$title = get_the_title( $post );
+
+		if ( ! current_user_can( 'edit_post', $post->ID ) ) {
+			return esc_html( $title );
+		}
+
+		return sprintf(
+			'<a href="%s">%s</a>',
+			esc_url( get_edit_post_link( $post ) ),
+			esc_html( $title )
+		);
+	}
+
+	/**
+	 * @param array $item
+	 *
+	 * @return string
+	 */
+	public function column_term( array $item ): string {
+		if ( $item['term'] === 'spinner' ) {
+			return $this->column_spinner();
+		}
+
+		return '';
+	}
+
+	/**
+	 * @param array $item
+	 *
+	 * @return string
+	 */
+	public function column_author( array $item ): string {
+		if ( $item['user'] === 'spinner' ) {
+			return $this->column_spinner();
+		}
+
+		return '';
 	}
 
 	/**
@@ -158,7 +257,7 @@ class GoalsTable extends WP_List_Table {
 			$this->get_columns(),
 			[],
 			[],
-			'page',
+			$this->get_primary_column(),
 		];
 
 		if ( wp_doing_ajax() ) {
@@ -166,10 +265,10 @@ class GoalsTable extends WP_List_Table {
 		} else {
 			$this->items = [
 				[
-					'page'     => 'spinner',
-					'visitors' => '',
-					'events'   => '',
-					'conv'     => '',
+					$this->get_primary_column() => 'spinner',
+					'visitors'                  => '',
+					'events'                    => '',
+					'conv'                      => '',
 				],
 			];
 		}
@@ -202,30 +301,27 @@ class GoalsTable extends WP_List_Table {
 			return [];
 		}
 
-		$type      = $this->get_type();
-		$breakdown = $type ? $api->{$api_method}(
-			$type,
-			[
-				'limit'  => $per_page,
-				'page'   => $page,
-				'search' => $search,
-			]
-		) : $api->{$api_method}(
-			[
-				'limit'  => $per_page,
-				'page'   => $page,
-				'search' => $search,
-			]
-		);
+		$type           = $this->get_type();
+		$query          = [
+			'limit'  => $per_page,
+			'page'   => $page,
+			'search' => $search,
+		];
+		$breakdown      = $type
+			? $api->{$api_method}( $type, $query )
+			: $api->{$api_method}( $query );
+		$total_visitors = $aggregate->get_visitors()->get_value();
 
 		return array_map(
-			function ( Breakdown $item ) use ( $aggregate ) {
-				return wp_parse_args(
-					[
-						'conv' => $item->get_visitors() / $aggregate->get_visitors()->get_value() * 100,
-					],
-					$item->to_array()
-				);
+			function ( Breakdown $item ) use ( $total_visitors ) {
+				$arr         = $item->to_array();
+				$arr['conv'] = $item->get_visitors() / $total_visitors * 100;
+
+				if ( isset( $arr['props']['id'] ) ) {
+					$arr[ $this->get_primary_column() ] = (int) $arr['props']['id'];
+				}
+
+				return $arr;
 			},
 			$breakdown
 		);
@@ -288,8 +384,9 @@ class GoalsTable extends WP_List_Table {
 		parent::_js_vars();
 
 		printf(
-			"<script>list_args.api_method = %s;</script>\n",
-			wp_json_encode( $this->get_api_method() )
+			"<script>\nlist_args.api_method = %s;\nlist_args.primary_column = %s;\n</script>\n",
+			wp_json_encode( $this->get_api_method() ),
+			wp_json_encode( $this->get_primary_column() )
 		);
 
 		$type = $this->get_type();

@@ -386,13 +386,15 @@ final class Admin {
 				$table = new GoalsTable();
 
 				if ( $object instanceof WP_Post_Type ) {
+					$table->set_primary_column( 'post' );
 					$table->set_api_method( 'popular_posts' );
 				} elseif ( $object instanceof WP_Taxonomy ) {
+					$table->set_primary_column( 'term' );
 					$table->set_api_method( 'popular_terms' );
 				}
 
 				$table->set_type( $object->name );
-				$table->set_label( $object->labels->singular_name );
+				$table->set_primary_label( $object->labels->singular_name );
 				$table->prepare_items();
 
 				echo '<form id="innstats-table-goals" method="get">';
@@ -446,7 +448,15 @@ final class Admin {
 	public function goals_ajax(): void {
 		$list_args = $_GET['list_args'] ?? [];
 
-		if ( ! isset( $list_args['class'], $list_args['screen']['id'], $list_args['screen']['base'], $list_args['api_method'] ) ) {
+		if (
+			! isset(
+				$list_args['class'],
+				$list_args['screen']['id'],
+				$list_args['screen']['base'],
+				$list_args['api_method'],
+				$list_args['primary_column']
+			)
+		) {
 			wp_die( 0 );
 		}
 
@@ -457,6 +467,7 @@ final class Admin {
 				'screen' => $list_args['screen']['id'],
 			]
 		);
+		$table->set_primary_column( $list_args['primary_column'] );
 		$table->set_api_method( $list_args['api_method'] );
 
 		if ( isset( $list_args['type'] ) ) {
