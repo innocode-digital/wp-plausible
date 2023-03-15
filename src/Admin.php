@@ -16,16 +16,68 @@ final class Admin {
 	const PAGE_NOT_FOUND_PAGES = 'not_found_pages';
 	const PAGE_CONVERSIONS     = 'conversions';
 
+	const PLAN_FREE    = 'free';
+	const PLAN_PRO     = 'pro';
+	const PLAN_PREMIUM = 'premium';
+	const PLAN_CUSTOM  = 'custom';
+
 	/**
 	 * @var array Hook Suffixes.
 	 */
 	private $pages = [];
 
 	/**
+	 * @var array
+	 */
+	private $plans = [];
+
+	/**
 	 * @return array
 	 */
 	public function get_pages(): array {
 		return $this->pages;
+	}
+
+	/**
+	 * @return Plan[]
+	 */
+	public function get_plans(): array {
+		return $this->plans;
+	}
+
+	/**
+	 * @param string $feature
+	 *
+	 * @return Plan|null
+	 */
+	public function find_plan_by_feature( string $feature ): ?Plan {
+		foreach ( $this->get_plans() as $plan ) {
+			if ( $plan->has_feature( $feature ) ) {
+				return $plan;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Admin constructor.
+	 */
+	public function __construct() {
+		$this->plans[ self::PLAN_FREE ] = new Plan( self::PLAN_FREE, __( 'Free', 'innstats' ) );
+		$this->plans[ self::PLAN_FREE ]->set_visible( false );
+		$this->plans[ self::PLAN_FREE ]->add_feature( self::PAGE_GENERAL );
+
+		$this->plans[ self::PLAN_PRO ] = new Plan( self::PLAN_PRO, __( 'Pro', 'innstats' ) );
+		$this->plans[ self::PLAN_PRO ]->add_feature( self::PAGE_POPULAR_POSTS );
+		$this->plans[ self::PLAN_PRO ]->add_feature( self::PAGE_POPULAR_TERMS );
+		$this->plans[ self::PLAN_PRO ]->add_feature( self::PAGE_NOT_FOUND_PAGES );
+
+		$this->plans[ self::PLAN_PREMIUM ] = new Plan( self::PLAN_PREMIUM, __( 'Premium', 'innstats' ) );
+		$this->plans[ self::PLAN_PREMIUM ]->add_feature( self::PAGE_POPULAR_USERS );
+
+		$this->plans[ self::PLAN_CUSTOM ] = new Plan( self::PLAN_CUSTOM, __( 'Custom', 'innstats' ) );
+		$this->plans[ self::PLAN_CUSTOM ]->add_feature( self::PAGE_CONVERSIONS );
 	}
 
 	/**
@@ -41,9 +93,11 @@ final class Admin {
 	 * @return void
 	 */
 	public function add_pages(): void {
+		$plan                              = $this->find_plan_by_feature( self::PAGE_GENERAL );
 		$this->pages[ self::PAGE_GENERAL ] = add_menu_page(
 			__( 'Analytics - Innstats', 'innstats' ),
-			__( 'Innstats', 'innstats' ),
+			/* translators: %s: Plan badge. */
+			sprintf( __( 'Innstats%s', 'innstats' ), (string) $plan ),
 			'manage_options',
 			'innstats-' . self::PAGE_GENERAL,
 			function (): void {
@@ -56,14 +110,15 @@ final class Admin {
 		foreach ( [
 			self::PAGE_POPULAR_POSTS   => __( 'Popular Posts', 'innstats' ),
 			self::PAGE_POPULAR_TERMS   => __( 'Popular Terms', 'innstats' ),
-			self::PAGE_POPULAR_USERS   => __( 'Popular Users', 'innstats' ),
 			self::PAGE_NOT_FOUND_PAGES => __( 'Not Found Pages', 'innstats' ),
+			self::PAGE_POPULAR_USERS   => __( 'Popular Users', 'innstats' ),
 			self::PAGE_CONVERSIONS     => __( 'Conversions', 'innstats' ),
 		] as $name => $title ) {
+			$plan                 = $this->find_plan_by_feature( $name );
 			$this->pages[ $name ] = add_submenu_page(
 				'innstats-' . self::PAGE_GENERAL,
 				sprintf( '%s - %s', $title, __( 'Innstats', 'innstats' ) ),
-				$title,
+				"$title$plan",
 				'manage_options',
 				"innstats-$name",
 				function () use ( $name ): void {
@@ -86,6 +141,8 @@ final class Admin {
 	 * @return void
 	 */
 	public function init(): void {
+		add_action( 'admin_print_styles', [ $this, 'enqueue_styles' ] );
+
 		foreach ( $this->get_pages() as $page => $hook_suffix ) {
 			add_action( "admin_print_scripts-$hook_suffix", [ $this, 'enqueue_scripts' ] );
 
@@ -99,6 +156,18 @@ final class Admin {
 
 			add_action( "innstats_admin_page_$page", [ $this, "page_$page" ] );
 		}
+	}
+
+	/**
+	 * @return void
+	 */
+	public function enqueue_styles(): void {
+		wp_enqueue_style(
+			'innstats-admin',
+			Plugin::url( 'admin', 'css' ),
+			[],
+			INNSTATS_VERSION
+		);
 	}
 
 	/**

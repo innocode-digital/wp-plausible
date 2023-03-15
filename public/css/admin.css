@@ -1,0 +1,44 @@
+.innstats-badge {
+	display: inline-block;
+	padding: 0.25em;
+	font-size: 0.5em;
+	line-height: 1;
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: middle;
+	border-radius: 0.25em;
+}
+
+.wp-submenu .innstats-badge {
+	font-size: 0.75em;
+}
+
+.innstats-badge_success {
+	color: #fff;
+	background-color: #28a745;
+}
+
+.innstats-badge_warning {
+	color: #212529;
+	background-color: #ffc107;
+}
+
+.innstats-badge_danger {
+	color: #fff;
+	background-color: #dc3545;
+}
+
+.innstats-badge_pro {
+	color: #fff;
+	background-color: #0073aa;
+}
+
+.innstats-badge_premium {
+	color: #fff;
+	background-color: #bf9b30;
+}
+
+.innstats-badge_custom {
+	color: #fff;
+	background-color: #7a7a76;
+}

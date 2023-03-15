@@ -66,32 +66,6 @@
 	margin: 0;
 }
 
-.innstats-badge {
-	display: inline-block;
-	padding: 0.25em;
-	font-size: 0.5em;
-	line-height: 1;
-	text-align: center;
-	white-space: nowrap;
-	vertical-align: middle;
-	border-radius: 0.25em;
-}
-
-.innstats-badge_success {
-	color: #fff;
-	background-color: #28a745;
-}
-
-.innstats-badge_warning {
-	color: #212529;
-	background-color: #ffc107;
-}
-
-.innstats-badge_danger {
-	color: #fff;
-	background-color: #dc3545;
-}
-
 .innstats-realtime-status {
 	border-radius: 25%;
 	box-sizing: border-box;
