@@ -320,7 +320,10 @@ class GoalsTable extends WP_List_Table {
 		$post_type_object = get_post_type_object( $post->post_type );
 		$can_edit_post    = current_user_can( 'edit_post', $post->ID );
 		$title            = _draft_or_post_title( $post );
-		$actions          = [];
+		$actions          = [
+			/* translators: %s: Post ID. */
+			'id' => sprintf( __( 'ID: %d', 'innstats' ), $post->ID ),
+		];
 
 		if ( $can_edit_post ) {
 			$actions['edit'] = sprintf(
@@ -372,7 +375,10 @@ class GoalsTable extends WP_List_Table {
 			return parent::handle_row_actions( $item, $column_name, $primary );
 		}
 
-		$actions = [];
+		$actions = [
+			/* translators: %s: Term ID. */
+			'id' => sprintf( __( 'ID: %d', 'innstats' ), $term->term_id ),
+		];
 
 		if ( current_user_can( 'edit_term', $term->term_id ) ) {
 			$actions['edit'] = sprintf(
