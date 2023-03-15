@@ -119,33 +119,37 @@ class Provider extends AbstractProvider {
 	 * @return Entities\Breakdown[]
 	 */
 	public function popular_data( string $template, string $type, array $query = [] ): array {
-		$event = $template;
+		$filters = "event:name==$template";
 
 		if ( $type ) {
-			$event .= ":$type";
+			$filters .= ":$type";
 		}
 
-		$filters = "event:name==$event";
+		$search = '';
 
 		if ( isset( $query['search'] ) ) {
-			$filters .= ";event:page=={$query['search']}";
+			$search = $query['search'];
 
 			unset( $query['search'] );
 		}
 
-		return $this->breakdown(
-			'popular_data',
-			wp_parse_args(
-				$query,
-				[
-					'property' => 'event:props:id',
-					'period'   => '7d',
-					'metrics'  => [ 'visitors', 'events' ],
-					'limit'    => get_option( 'posts_per_page' ),
-					'filters'  => $filters,
-				]
-			)
+		$query = wp_parse_args(
+			$query,
+			[
+				'property' => 'event:props:id',
+				'period'   => '7d',
+				'metrics'  => [ 'visitors', 'events' ],
+				'limit'    => get_option( 'posts_per_page' ),
+			]
 		);
+
+		if ( $search ) {
+			$filters .= ";{$query['property']}==$search";
+		}
+
+		$query['filters'] = $filters;
+
+		return $this->breakdown( 'popular_data', $query );
 	}
 
 	/**

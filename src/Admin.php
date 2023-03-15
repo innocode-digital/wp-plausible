@@ -327,8 +327,8 @@ final class Admin {
 			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 		}
 
-		$post_types = get_post_types( [ 'public' => true ], 'objects' );
-		$taxonomies = get_taxonomies( [ 'public' => true ], 'objects' );
+		$post_types = get_post_types( [], 'objects' );
+		$taxonomies = get_taxonomies( [], 'objects' );
 
 		$tabs = array_values(
 			apply_filters(
@@ -338,13 +338,13 @@ final class Admin {
 						function ( $post_type ) {
 							return [ "post_type-$post_type->name", $post_type ];
 						},
-						$post_types
+						array_filter( $post_types, 'is_post_type_viewable' )
 					),
 					array_map(
 						function ( $taxonomy ) {
 							return [ "taxonomy-$taxonomy->name", $taxonomy ];
 						},
-						$taxonomies
+						array_filter( $taxonomies, 'is_taxonomy_viewable' )
 					)
 				)
 			)
@@ -400,7 +400,16 @@ final class Admin {
 				echo '<form id="innstats-table-goals" method="get">';
 
 				$table->search_box( $object->labels->search_items, 'goals' );
-				$table->search_help();
+
+				printf(
+					'<p class="description">%s</p>',
+					sprintf(
+						/* translators: %s: post type or taxonomy singular name */
+						__( 'Search by ID (identifier). Use ID of %s which you want to find.', 'innstats' ),
+						esc_html( $object->labels->singular_name )
+					)
+				);
+
 				$table->display();
 
 				echo '</form>';
@@ -425,7 +434,12 @@ final class Admin {
 		echo '<form id="innstats-table-goals" method="get">';
 
 		$table->search_box( __( 'Search Pages', 'innstats' ), 'goals' );
-		$table->search_help();
+
+		printf(
+			'<p class="description">%s</p>',
+			__( 'Search by Page (path). You can use one asterisk (*) to represent any number of characters within the same directory like <code>/rule/sub*/more</code> or you can use double asterisks (**) to represent any number of characters even forward slashes like <code>/blog**</code>. Asterisks can be placed on either end or in the middle of any page path URL.', 'innstats' )
+		);
+
 		$table->display();
 
 		echo '</form>';

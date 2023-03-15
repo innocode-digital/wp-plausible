@@ -148,19 +148,9 @@ class GoalsTable extends WP_List_Table {
 			return '';
 		}
 
-		$path             = $item['page'];
-		$home_url         = rtrim( home_url(), '/' );
-		$home_path        = parse_url( $home_url, PHP_URL_PATH );
-		$home_path_length = strlen( $home_path );
-
-		if ( $home_path !== null && substr( $path, 0, $home_path_length ) === $home_path ) {
-			$path = substr( $path, $home_path_length );
-		}
-
 		return sprintf(
-			'<a href="%s" target="_blank">%s</a>',
-			home_url( $path ),
-			$item['page']
+			'<strong class="row-title">%s</strong>',
+			esc_html( $item['page'] )
 		);
 	}
 
@@ -170,7 +160,7 @@ class GoalsTable extends WP_List_Table {
 	 * @return string
 	 */
 	public function column_comment( array $item ): string {
-		if ( $item['comment_id'] === 'spinner' ) {
+		if ( $item['comment'] === 'spinner' ) {
 			return $this->column_spinner();
 		}
 
@@ -193,16 +183,11 @@ class GoalsTable extends WP_List_Table {
 			return '';
 		}
 
-		$title = get_the_title( $post );
-
-		if ( ! current_user_can( 'edit_post', $post->ID ) ) {
-			return esc_html( $title );
-		}
+		$title = _draft_or_post_title( $post );
 
 		return sprintf(
-			'<a href="%s">%s</a>',
-			esc_url( get_edit_post_link( $post ) ),
-			esc_html( $title )
+			'<strong class="row-title">%s</strong>',
+			$title
 		);
 	}
 
@@ -216,7 +201,16 @@ class GoalsTable extends WP_List_Table {
 			return $this->column_spinner();
 		}
 
-		return '';
+		$term = get_term_by( 'term_taxonomy_id', $item['term'] );
+
+		if ( ! $term ) {
+			return '';
+		}
+
+		return sprintf(
+			'<strong class="row-title">%s</strong>',
+			$term->name
+		);
 	}
 
 	/**
@@ -247,6 +241,166 @@ class GoalsTable extends WP_List_Table {
 	 */
 	public function column_default( $item, $column_name ): string {
 		return $item[ $column_name ] ?? '';
+	}
+
+	/**
+	 * @param array  $item
+	 * @param string $column_name
+	 * @param string $primary
+	 *
+	 * @return string
+	 */
+	protected function handle_row_actions( $item, $column_name, $primary ): string {
+		if ( $primary !== $column_name ) {
+			return parent::handle_row_actions( $item, $column_name, $primary );
+		}
+
+		if ( $column_name === 'page' ) {
+			return $this->handle_page_row_actions( $item, $column_name, $primary );
+		}
+
+		if ( $column_name === 'post' ) {
+			return $this->handle_post_row_actions( $item, $column_name, $primary );
+		}
+
+		if ( $column_name === 'term' ) {
+			return $this->handle_term_row_actions( $item, $column_name, $primary );
+		}
+
+		return parent::handle_row_actions( $item, $column_name, $primary );
+	}
+
+	/**
+	 * @param array  $item
+	 * @param string $column_name
+	 * @param string $primary
+	 *
+	 * @return string
+	 */
+	protected function handle_page_row_actions( array $item, string $column_name, string $primary ): string {
+		if ( ! is_string( $item['page'] ) ) {
+			return parent::handle_row_actions( $item, $column_name, $primary );
+		}
+
+		$path             = $item['page'];
+		$home_url         = rtrim( home_url(), '/' );
+		$home_path        = parse_url( $home_url, PHP_URL_PATH );
+		$home_path_length = strlen( $home_path );
+		$actions          = [];
+
+		if ( $home_path !== null && substr( $path, 0, $home_path_length ) === $home_path ) {
+			$path = substr( $path, $home_path_length );
+		}
+
+		$actions['view'] = sprintf(
+			'<a href="%s" rel="bookmark" aria-label="%s">%s</a>',
+			home_url( $path ),
+			/* translators: %s: Page path. */
+			esc_attr( sprintf( __( 'View &#8220;%s&#8221;' ), $item['page'] ) ),
+			__( 'View' )
+		);
+
+		return $this->row_actions( $actions );
+	}
+
+	/**
+	 * @param array  $item
+	 * @param string $column_name
+	 * @param string $primary
+	 *
+	 * @return string
+	 */
+	protected function handle_post_row_actions( array $item, string $column_name, string $primary ): string {
+		$post = get_post( $item['post'] );
+
+		if ( ! $post ) {
+			return parent::handle_row_actions( $item, $column_name, $primary );
+		}
+
+		$post_type_object = get_post_type_object( $post->post_type );
+		$can_edit_post    = current_user_can( 'edit_post', $post->ID );
+		$title            = _draft_or_post_title( $post );
+		$actions          = [];
+
+		if ( $can_edit_post ) {
+			$actions['edit'] = sprintf(
+				'<a href="%s" aria-label="%s">%s</a>',
+				get_edit_post_link( $post->ID ),
+				/* translators: %s: Post title. */
+				esc_attr( sprintf( __( 'Edit &#8220;%s&#8221;' ), $title ) ),
+				__( 'Edit' )
+			);
+		}
+
+		if ( is_post_type_viewable( $post_type_object ) ) {
+			if ( in_array( $post->post_status, [ 'pending', 'draft', 'future' ], true ) ) {
+				if ( $can_edit_post ) {
+					$preview_link    = get_preview_post_link( $post );
+					$actions['view'] = sprintf(
+						'<a href="%s" rel="bookmark" aria-label="%s">%s</a>',
+						esc_url( $preview_link ),
+						/* translators: %s: Post title. */
+						esc_attr( sprintf( __( 'Preview &#8220;%s&#8221;' ), $title ) ),
+						__( 'Preview' )
+					);
+				}
+			} elseif ( 'trash' !== $post->post_status ) {
+				$actions['view'] = sprintf(
+					'<a href="%s" rel="bookmark" aria-label="%s">%s</a>',
+					get_permalink( $post->ID ),
+					/* translators: %s: Post title. */
+					esc_attr( sprintf( __( 'View &#8220;%s&#8221;' ), $title ) ),
+					__( 'View' )
+				);
+			}
+		}
+
+		return $this->row_actions( $actions );
+	}
+
+	/**
+	 * @param array  $item
+	 * @param string $column_name
+	 * @param string $primary
+	 *
+	 * @return string
+	 */
+	protected function handle_term_row_actions( array $item, string $column_name, string $primary ): string {
+		$term = get_term_by( 'term_taxonomy_id', $item['term'] );
+
+		if ( ! $term ) {
+			return parent::handle_row_actions( $item, $column_name, $primary );
+		}
+
+		$actions = [];
+
+		if ( current_user_can( 'edit_term', $term->term_id ) ) {
+			$actions['edit'] = sprintf(
+				'<a href="%s" aria-label="%s">%s</a>',
+				esc_url(
+					add_query_arg(
+						'wp_http_referer',
+						rawurlencode( wp_unslash( $_SERVER['REQUEST_URI'] ) ),
+						get_edit_term_link( $term )
+					)
+				),
+				/* translators: %s: Taxonomy term name. */
+				esc_attr( sprintf( __( 'Edit &#8220;%s&#8221;' ), $term->name ) ),
+				__( 'Edit' )
+			);
+		}
+
+		if ( is_term_publicly_viewable( $term ) ) {
+			$actions['view'] = sprintf(
+				'<a href="%s" aria-label="%s">%s</a>',
+				get_term_link( $term ),
+				/* translators: %s: Taxonomy term name. */
+				esc_attr( sprintf( __( 'View &#8220;%s&#8221; archive' ), $term->name ) ),
+				__( 'View' )
+			);
+		}
+
+		return $this->row_actions( $actions );
 	}
 
 	/**
@@ -301,15 +455,19 @@ class GoalsTable extends WP_List_Table {
 			return [];
 		}
 
-		$type           = $this->get_type();
-		$query          = [
+		$type  = $this->get_type();
+		$query = [
 			'limit'  => $per_page,
 			'page'   => $page,
 			'search' => $search,
 		];
-		$breakdown      = $type
-			? $api->{$api_method}( $type, $query )
-			: $api->{$api_method}( $query );
+
+		if ( $type ) {
+			$breakdown = $api->{$api_method}( $type, $query );
+		} else {
+			$breakdown = $api->{$api_method}( $query );
+		}
+
 		$total_visitors = $aggregate->get_visitors()->get_value();
 
 		return array_map(
@@ -358,16 +516,6 @@ class GoalsTable extends WP_List_Table {
 		}
 
 		echo '</div>';
-	}
-
-	/**
-	 * @return void
-	 */
-	public function search_help(): void {
-		printf(
-			'<p class="description">%s</p>',
-			__( 'Search by Page (path). You can use one asterisk (*) to represent any number of characters within the same directory like <code>/rule/sub*/more</code> or you can use double asterisks (**) to represent any number of characters even forward slashes like <code>/blog**</code>. Asterisks can be placed on either end or in the middle of any page path URL.', 'innstats' )
-		);
 	}
 
 	/**
