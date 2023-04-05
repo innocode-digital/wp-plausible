@@ -6,6 +6,7 @@
   "scripts": {
     "build:js:utils": "uglifyjs ./public/js/utils.js -c -m -o ./public/js/utils.min.js",
     "build:js:api": "uglifyjs ./public/js/api.js -c -m -o ./public/js/api.min.js",
+    "build:js:filters": "uglifyjs ./public/js/filters.js -c -m -o ./public/js/filters.min.js",
     "build:js:charts": "uglifyjs ./public/js/charts.js -c -m -o ./public/js/charts.min.js",
     "build:js:advert": "uglifyjs ./public/js/advert.js -c -m -o ./public/js/advert.min.js",
     "build:js:providers": "uglifyjs ./public/js/providers/plausible.js -c -m -o ./public/js/providers/plausible.min.js",
@@ -13,7 +14,7 @@
     "build:js:pages:dashboard": "uglifyjs ./public/js/pages/dashboard.js -c -m -o ./public/js/pages/dashboard.min.js",
     "build:js:pages:goals": "uglifyjs ./public/js/pages/goals.js -c -m -o ./public/js/pages/goals.min.js",
     "build:js:pages": "npm run build:js:pages:dashboard && npm run build:js:pages:goals",
-    "build:js": "npm run build:js:utils && npm run build:js:api && npm run build:js:charts && npm run build:js:advert && npm run build:js:providers && npm run build:js:main && npm run build:js:pages",
+    "build:js": "npm run build:js:utils && npm run build:js:api && npm run build:js:filters && npm run build:js:charts && npm run build:js:advert && npm run build:js:providers && npm run build:js:main && npm run build:js:pages",
     "build:css:admin": "postcss ./public/css/admin.css -o ./public/css/admin.min.css",
     "build:css:pages:dashboard": "postcss ./public/css/pages/dashboard.css -o ./public/css/pages/dashboard.min.css",
     "build:css:pages:goals": "postcss ./public/css/pages/goals.css -o ./public/css/pages/goals.min.css",

@@ -15,21 +15,12 @@ final class Admin {
 	const PAGE_POPULAR_USERS   = 'popular_users';
 	const PAGE_NOT_FOUND_PAGES = 'not_found_pages';
 	const PAGE_CONVERSIONS     = 'conversions';
-
-	const PLAN_FREE    = 'free';
-	const PLAN_PRO     = 'pro';
-	const PLAN_PREMIUM = 'premium';
-	const PLAN_CUSTOM  = 'custom';
+	const PAGE_UPGRADE_PLAN    = 'upgrade_plan';
 
 	/**
 	 * @var array Hook Suffixes.
 	 */
 	private $pages = [];
-
-	/**
-	 * @var array
-	 */
-	private $plans = [];
 
 	/**
 	 * @return array
@@ -39,51 +30,11 @@ final class Admin {
 	}
 
 	/**
-	 * @return Plan[]
-	 */
-	public function get_plans(): array {
-		return $this->plans;
-	}
-
-	/**
-	 * @param string $feature
-	 *
-	 * @return Plan|null
-	 */
-	public function find_plan_by_feature( string $feature ): ?Plan {
-		foreach ( $this->get_plans() as $plan ) {
-			if ( $plan->has_feature( $feature ) ) {
-				return $plan;
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Admin constructor.
-	 */
-	public function __construct() {
-		$this->plans[ self::PLAN_FREE ] = new Plan( self::PLAN_FREE, __( 'Free', 'innstats' ) );
-		$this->plans[ self::PLAN_FREE ]->set_visible( false );
-		$this->plans[ self::PLAN_FREE ]->add_feature( self::PAGE_GENERAL );
-
-		$this->plans[ self::PLAN_PRO ] = new Plan( self::PLAN_PRO, __( 'Pro', 'innstats' ) );
-		$this->plans[ self::PLAN_PRO ]->add_feature( self::PAGE_POPULAR_POSTS );
-		$this->plans[ self::PLAN_PRO ]->add_feature( self::PAGE_POPULAR_TERMS );
-		$this->plans[ self::PLAN_PRO ]->add_feature( self::PAGE_NOT_FOUND_PAGES );
-
-		$this->plans[ self::PLAN_PREMIUM ] = new Plan( self::PLAN_PREMIUM, __( 'Premium', 'innstats' ) );
-		$this->plans[ self::PLAN_PREMIUM ]->add_feature( self::PAGE_POPULAR_USERS );
-
-		$this->plans[ self::PLAN_CUSTOM ] = new Plan( self::PLAN_CUSTOM, __( 'Custom', 'innstats' ) );
-		$this->plans[ self::PLAN_CUSTOM ]->add_feature( self::PAGE_CONVERSIONS );
-	}
-
-	/**
 	 * Initializes dashboard functionality.
 	 */
 	public function run() {
+		add_filter( 'set-screen-option', [ $this, 'set_screen_option' ], 10, 3 );
+
 		add_action( 'admin_menu', [ $this, 'add_pages' ] );
 		add_action( 'admin_init', [ $this, 'init' ] );
 		add_action( 'wp_ajax_innstats_admin_goals', [ $this, 'goals_ajax' ] );
@@ -93,11 +44,10 @@ final class Admin {
 	 * @return void
 	 */
 	public function add_pages(): void {
-		$plan                              = $this->find_plan_by_feature( self::PAGE_GENERAL );
+		$plan                              = innstats()->find_plan_by_feature( self::PAGE_GENERAL );
 		$this->pages[ self::PAGE_GENERAL ] = add_menu_page(
 			__( 'Analytics - Innstats', 'innstats' ),
-			/* translators: %s: Plan badge. */
-			sprintf( __( 'Innstats%s', 'innstats' ), (string) $plan ),
+			sprintf( '%s%s', __( 'Innstats', 'innstats' ), $plan ),
 			'manage_options',
 			'innstats-' . self::PAGE_GENERAL,
 			function (): void {
@@ -114,7 +64,7 @@ final class Admin {
 			self::PAGE_POPULAR_USERS   => __( 'Popular Users', 'innstats' ),
 			self::PAGE_CONVERSIONS     => __( 'Conversions', 'innstats' ),
 		] as $name => $title ) {
-			$plan                 = $this->find_plan_by_feature( $name );
+			$plan                 = innstats()->find_plan_by_feature( $name );
 			$this->pages[ $name ] = add_submenu_page(
 				'innstats-' . self::PAGE_GENERAL,
 				sprintf( '%s - %s', $title, __( 'Innstats', 'innstats' ) ),
@@ -134,7 +84,20 @@ final class Admin {
 	 * @return void
 	 */
 	private function page( string $name ): void {
-		$this->view( "admin/pages/$name" );
+		$current_plan = innstats()->get_current_plan();
+		$plan         = innstats()->get_plans()[ $current_plan ];
+		$page         = $plan->has_feature( $name ) ? $name : 'upgrade_plan';
+
+		$this->view( "admin/pages/$page" );
+	}
+
+	/**
+	 * @param string $name
+	 *
+	 * @return void
+	 */
+	private function filter( string $name ): void {
+		$this->view( "admin/filters/$name" );
 	}
 
 	/**
@@ -143,7 +106,15 @@ final class Admin {
 	public function init(): void {
 		add_action( 'admin_print_styles', [ $this, 'enqueue_styles' ] );
 
+		$current_plan = innstats()->get_current_plan();
+		$plan         = innstats()->get_plans()[ $current_plan ];
+
 		foreach ( $this->get_pages() as $page => $hook_suffix ) {
+			if ( ! $plan->has_feature( $page ) ) {
+				continue;
+			}
+
+			add_action( "load-$hook_suffix", [ $this, 'add_screen_options' ] );
 			add_action( "admin_print_scripts-$hook_suffix", [ $this, 'enqueue_scripts' ] );
 
 			if ( method_exists( $this, "enqueue_{$page}_styles" ) ) {
@@ -156,6 +127,39 @@ final class Admin {
 
 			add_action( "innstats_admin_page_$page", [ $this, "page_$page" ] );
 		}
+
+		add_action( 'innstats_admin_page_' . self::PAGE_UPGRADE_PLAN, [ $this, 'page_' . self::PAGE_UPGRADE_PLAN ] );
+	}
+
+	/**
+	 * @return void
+	 */
+	public function add_screen_options(): void {
+		add_screen_option(
+			'per_page',
+			[
+				'default' => self::PAGE_GENERAL === substr( get_current_screen()->id, -strlen( self::PAGE_GENERAL ) ) ? 10 : 20,
+			]
+		);
+	}
+
+	/**
+	 * @param mixed  $screen_option
+	 * @param string $option
+	 * @param int    $value
+	 *
+	 * @return mixed
+	 */
+	public function set_screen_option( $screen_option, string $option, int $value ) {
+		if ( 'toplevel_page_innstats_general_per_page' === $option ) {
+			return min( max( $value, 5 ), 15 );
+		}
+
+		if ( 'innstats_page_innstats_' === substr( $option, 0, 23 ) ) {
+			return min( max( $value, 5 ), 100 );
+		}
+
+		return $screen_option;
 	}
 
 	/**
@@ -234,11 +238,19 @@ final class Admin {
 			true
 		);
 
+		wp_enqueue_script(
+			'innstats-filters',
+			Plugin::url( 'filters' ),
+			[],
+			INNSTATS_VERSION,
+			true
+		);
+
 		wp_add_inline_script(
 			'innstats-api',
 			'window.innstats = ' . json_encode(
 				[
-					'home_url' => esc_url_raw( home_url() ),
+					'per_page' => $this->per_page(),
 				]
 			) . ';',
 			'before'
@@ -365,6 +377,16 @@ final class Admin {
 	 * @return void
 	 */
 	public function page_general(): void {
+		$this->filter( 'properties' );
+
+		echo '<div class="tablenav top">';
+		echo '<div class="alignleft actions">';
+
+		$this->filter( 'period' );
+
+		echo '</div>';
+		echo '</div>';
+
 		// @phpcs:ignore Innocode.Security.EscapeOutput.OutputNotEscaped
 		echo $this->section(
 			'general',
@@ -458,8 +480,6 @@ final class Admin {
 				$table->set_type( $object->name );
 				$table->prepare_items();
 
-				echo '<form id="innstats-table-goals" method="get">';
-
 				$table->search_box( $object->labels->search_items, 'goals' );
 
 				printf(
@@ -472,8 +492,6 @@ final class Admin {
 				);
 
 				$table->display();
-
-				echo '</form>';
 
 				break;
 			}
@@ -558,8 +576,6 @@ final class Admin {
 		$table->set_api_method( 'popular_authors' );
 		$table->prepare_items();
 
-		echo '<form id="innstats-table-goals" method="get">';
-
 		$table->search_box( __( 'Search Users' ), 'goals' );
 
 		printf(
@@ -568,8 +584,6 @@ final class Admin {
 		);
 
 		$table->display();
-
-		echo '</form>';
 	}
 
 	/**
@@ -584,8 +598,6 @@ final class Admin {
 		$table->set_api_method( 'not_found_pages' );
 		$table->prepare_items();
 
-		echo '<form id="innstats-table-goals" method="get">';
-
 		$table->search_box( __( 'Search Pages', 'innstats' ), 'goals' );
 
 		printf(
@@ -594,14 +606,12 @@ final class Admin {
 		);
 
 		$table->display();
-
-		echo '</form>';
 	}
 
 	/**
 	 * @return void
 	 */
-	public function page_conversions(): void {
+	public function page_upgrade_plan(): void {
 		printf(
 			'<h2>%s</h2><p>%s</p>',
 			esc_html__( 'It\'s not available yet', 'innstats' ),
@@ -648,5 +658,24 @@ final class Admin {
 		$table->ajax_response();
 
 		wp_die( 0 );
+	}
+
+	/**
+	 * @return int
+	 */
+	public function per_page(): int {
+		$current_screen = get_current_screen();
+		$option         = str_replace( '-', '_', $current_screen->id . '_per_page' );
+		$per_page       = (int) get_user_option( $option );
+
+		if ( empty( $per_page ) || $per_page < 5 ) {
+			$per_page = $current_screen->get_option( 'per_page', 'default' );
+
+			if ( ! $per_page ) {
+				$per_page = self::PAGE_GENERAL === substr( $current_screen->id, -strlen( self::PAGE_GENERAL ) ) ? 10 : 20;
+			}
+		}
+
+		return $per_page;
 	}
 }

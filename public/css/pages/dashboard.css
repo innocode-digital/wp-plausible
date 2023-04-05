@@ -133,3 +133,41 @@
 .innstats-widget_realtime-visitors {
 	font-size: 2.5em;
 }
+
+.innstats-filter.button {
+	background-color: #f0f0f1;
+	border-color: #3c434a;
+	color: #3c434a;
+	cursor: default;
+	padding-right: 4px;
+}
+
+.innstats-filter.button:hover,
+.innstats-filter.button:active {
+	background-color: #f0f0f1;
+	border-color: #3c434a;
+	color: #3c434a;
+}
+
+.innstats-filter__value {
+	font-weight: bold;
+}
+
+.innstats-filter__button {
+	background: none;
+	border: none;
+	color: #2271b1;
+	cursor: pointer;
+	margin: 0;
+	overflow: hidden;
+	padding: 0;
+	vertical-align: -5px;
+}
+
+.innstats-filter__button:hover {
+	color: #0a4b78;
+}
+
+.innstats-filter__button:active {
+	color: #8c8f94;
+}

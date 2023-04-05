@@ -83,7 +83,7 @@
     referrer = location.href;
   };
 
-  pageview(referrer, innstats.queried_object || {});
+  pageview(referrer, innstats.queried_object);
 
   referrer = location.href;
 

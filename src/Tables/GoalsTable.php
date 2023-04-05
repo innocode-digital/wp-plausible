@@ -3,10 +3,14 @@
 namespace WPD\Statistics\Tables;
 
 use WP_List_Table;
+use WPD\Statistics\Admin;
 use WPD\Statistics\Plugin;
 use WPD\Statistics\Providers\Plausible\Entities\Breakdown;
+use WPD\Statistics\Traits\ViewsTrait;
 
 class GoalsTable extends WP_List_Table {
+
+	use ViewsTrait;
 
 	/**
 	 * @var string
@@ -149,7 +153,14 @@ class GoalsTable extends WP_List_Table {
 		}
 
 		return sprintf(
-			'<strong class="row-title">%s</strong>',
+			'<a class="row-title" href="%s" aria-label="%s">%s</a>',
+			add_query_arg(
+				'event:page',
+				rawurlencode( $item['page'] ),
+				admin_url( 'admin.php?page=innstats-' . Admin::PAGE_GENERAL )
+			),
+			/* translators: %s: Page path. */
+			esc_attr( sprintf( __( '&#8220;%s&#8221; (Filter)' ), $item['page'] ) ),
 			esc_html( $item['page'] )
 		);
 	}
@@ -186,7 +197,16 @@ class GoalsTable extends WP_List_Table {
 		$title = _draft_or_post_title( $post );
 
 		return sprintf(
-			'<strong class="row-title">%s</strong>',
+			'<a class="row-title" href="%s" aria-label="%s">%s</a>',
+			add_query_arg(
+				'event:page',
+				rawurlencode( wp_make_link_relative( get_the_permalink(
+					$post
+				) ) ),
+				admin_url( 'admin.php?page=innstats-' . Admin::PAGE_GENERAL )
+			),
+			/* translators: %s: Post title. */
+			esc_attr( sprintf( __( '&#8220;%s&#8221; (Filter)' ), $title ) ),
 			$title
 		);
 	}
@@ -208,7 +228,16 @@ class GoalsTable extends WP_List_Table {
 		}
 
 		return sprintf(
-			'<strong class="row-title">%s</strong>',
+			'<a class="row-title" href="%s" aria-label="%s">%s</a>',
+			add_query_arg(
+				'event:page',
+				rawurlencode( wp_make_link_relative( get_term_link(
+					$term
+				) ) ),
+				admin_url( 'admin.php?page=innstats-' . Admin::PAGE_GENERAL )
+			),
+			/* translators: %s: Taxonomy term name. */
+			esc_attr( sprintf( __( '&#8220;%s&#8221; (Filter)' ), $term->name ) ),
 			$term->name
 		);
 	}
@@ -305,6 +334,18 @@ class GoalsTable extends WP_List_Table {
 			$path = substr( $path, $home_path_length );
 		}
 
+		$actions['filter'] = sprintf(
+			'<a href="%s" aria-label="%s">%s</a>',
+			add_query_arg(
+				'event:page',
+				rawurlencode( $item['page'] ),
+				admin_url( 'admin.php?page=innstats-' . Admin::PAGE_GENERAL )
+			),
+			/* translators: %s: Page path. */
+			esc_attr( sprintf( __( 'Filter &#8220;%s&#8221;' ), $item['page'] ) ),
+			__( 'Filter' )
+		);
+
 		$actions['view'] = sprintf(
 			'<a href="%s" rel="bookmark" aria-label="%s">%s</a>',
 			home_url( $path ),
@@ -339,7 +380,20 @@ class GoalsTable extends WP_List_Table {
 		$title            = _draft_or_post_title( $post );
 		$actions          = [
 			/* translators: %s: Post ID. */
-			'id' => sprintf( __( 'ID: %d', 'innstats' ), $post->ID ),
+			'id'     => sprintf( __( 'ID: %d', 'innstats' ), $post->ID ),
+			'filter' => sprintf(
+				'<a href="%s" aria-label="%s">%s</a>',
+				add_query_arg(
+					'event:page',
+					rawurlencode( wp_make_link_relative( get_the_permalink(
+						$post
+					) ) ),
+					admin_url( 'admin.php?page=innstats-' . Admin::PAGE_GENERAL )
+				),
+				/* translators: %s: Post title. */
+				esc_attr( sprintf( __( 'Filter &#8220;%s&#8221;' ), $title ) ),
+				__( 'Filter' )
+			),
 		];
 
 		if ( $can_edit_post ) {
@@ -398,7 +452,18 @@ class GoalsTable extends WP_List_Table {
 
 		$actions = [
 			/* translators: %s: Term ID. */
-			'id' => sprintf( __( 'ID: %d', 'innstats' ), $term->term_id ),
+			'id'     => sprintf( __( 'ID: %d', 'innstats' ), $term->term_id ),
+			'filter' => sprintf(
+				'<a href="%s" aria-label="%s">%s</a>',
+				add_query_arg(
+					'event:page',
+					rawurlencode( wp_make_link_relative( get_term_link( $term ) ) ),
+					admin_url( 'admin.php?page=innstats-' . Admin::PAGE_GENERAL )
+				),
+				/* translators: %s: Taxonomy term name. */
+				esc_attr( sprintf( __( 'Filter &#8220;%s&#8221;' ), $term->name ) ),
+				__( 'Filter' )
+			),
 		];
 
 		if ( current_user_can( 'edit_term', $term->term_id ) ) {
@@ -517,17 +582,20 @@ class GoalsTable extends WP_List_Table {
 		$provider = isset( $_REQUEST['provider'] ) && in_array( $_REQUEST['provider'], array_keys( Plugin::PROVIDERS ), true )
 			? $_REQUEST['provider'] // phpcs:ignore Innocode.Security.NonceVerification.Recommended
 			: Plugin::PROVIDER_PLAUSIBLE;
-		// phpcs:ignore Innocode.Security.NonceVerification.Recommended
-		$per_page = isset( $_REQUEST['number'] ) ? (int) $_REQUEST['number'] : 20;
-		$page     = $this->get_pagenum();
-		// phpcs:ignore Innocode.Security.NonceVerification.Recommended
-		$search = $_REQUEST['s'] ?? '';
 
 		$api = innstats()->get_provider( $provider );
 
 		if ( ! $api ) {
 			return [];
 		}
+
+		// phpcs:ignore Innocode.Security.NonceVerification.Recommended
+		$per_page = isset( $_REQUEST['number'] ) ? (int) $_REQUEST['number'] : 20;
+		$page     = $this->get_pagenum();
+		// phpcs:ignore Innocode.Security.NonceVerification.Recommended
+		$search = $_REQUEST['s'] ?? '';
+		// phpcs:ignore Innocode.Security.NonceVerification.Recommended
+		$period = $_REQUEST['period'] ?? '7d';
 
 		$aggregate  = $api->get_api()->get_stats()->aggregate();
 		$api_method = $this->get_api_method();
@@ -542,6 +610,33 @@ class GoalsTable extends WP_List_Table {
 			'page'   => $page,
 			'search' => $search,
 		];
+		$today = date_i18n( 'Y-m-d' );
+
+		switch ( $period ) {
+			case 'day':
+			case '7d':
+			case '30d':
+			case 'month':
+			case '6mo':
+			case '12mo':
+				$query['period'] = $period;
+
+				break;
+			case 'custom':
+				$query['period'] = 'custom';
+				// phpcs:ignore Innocode.Security.NonceVerification.Recommended
+				$start_date = $_REQUEST['start_date'] ?? $today;
+				// phpcs:ignore Innocode.Security.NonceVerification.Recommended
+				$end_date      = $_REQUEST['end_date'] ?? $today;
+				$query['date'] = sprintf( '%s,%s', $start_date, $end_date );
+
+				break;
+			default:
+				$query['period'] = 'custom';
+				$query['date']   = sprintf( '%s,%s', $period, $today );
+
+				break;
+		}
 
 		if ( $type ) {
 			$breakdown = $api->{$api_method}( $type, $query );
@@ -574,11 +669,12 @@ class GoalsTable extends WP_List_Table {
 	protected function extra_tablenav( $which ): void {
 		if ( 'top' === $which ) {
 			echo '<div class="alignleft actions">';
+
+			$this->view( 'admin/filters/period' );
 		} else {
 			echo '<div class="aligncenter actions">';
 			echo '<input type="hidden" name="action" value="innstats_admin_goals">';
 			echo '<input type="hidden" name="paged" value="1">';
-			echo '<input type="hidden" name="number" value="20">';
 
 			wp_nonce_field( 'fetch-list-' . static::get_class(), '_ajax_fetch_list_nonce' );
 			printf(

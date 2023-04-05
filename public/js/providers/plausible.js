@@ -78,11 +78,25 @@
     pushEvent(event, referrer, props);
   };
 
+  var pushAuthor = function (id, referrer, props) {
+    if (!props) {
+      props = {};
+    }
+
+    props.id = id;
+
+    pushEvent('author', referrer, props);
+  };
+
   var pageview = function (referrer, queriedObject, props) {
     pushEvent('pageview', referrer, props);
 
     if (queriedObject) {
       pushQueriedObject(queriedObject, referrer, props);
+    }
+
+    if (utils.has(queriedObject, 'author') && queriedObject.author) {
+      pushAuthor(queriedObject.author, referrer, props);
     }
   };
 

@@ -58,6 +58,10 @@ if ( $GLOBALS['innstats']->has_provider( Statistics\Plugin::PROVIDER_PLAUSIBLE )
 	}
 }
 
+if ( defined( 'INNSTATS_PLAN' ) ) {
+	$GLOBALS['innstats']->set_current_plan( INNSTATS_PLAN );
+}
+
 $GLOBALS['innstats']->run();
 
 if ( ! function_exists( 'innstats' ) ) {

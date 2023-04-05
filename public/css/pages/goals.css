@@ -32,3 +32,8 @@ p.search-box {
 p.search-box + p.description {
 	margin: 0;
 }
+
+.row-actions > .filter {
+	float: none;
+	margin: 0;
+}

@@ -1,8 +1,8 @@
 (function (innstats, wp, $) {
   wp.domReady(() => {
+    const { per_page: perPage } = innstats;
     const $form = $('#innstats-table-goals');
     const $paged = $form.find('input[name="paged"]');
-    const $number = $form.find('input[name="number"]');
     const $list = $('#the-list').wpList({
       alt: '',
       delColor: 'none',
@@ -21,6 +21,7 @@
             ...window.list_args,
             class: window.list_args.class.replace(/\\/g, ''), // Remove backslashes from namespace
           },
+          number: perPage,
           ...$form.serializeArray().reduce(
             (data, { name, value }) => ({
               ...data,
@@ -39,7 +40,7 @@
 
           $loader.hide().appendTo($list);
 
-          if ($rows.length < Number.parseInt($number.val(), 10)) {
+          if ($rows.length < perPage) {
             $loadMore.hide();
           } else {
             $paged.val(Number.parseInt($paged.val(), 10) + 1);

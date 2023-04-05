@@ -56,6 +56,10 @@ final class Plugin {
 		self::TEMPLATE_ARCHIVE,
 	];
 	const INTEGRATION_FLUSH_CACHE = 'flush_cache';
+	const PLAN_FREE               = 'free';
+	const PLAN_PRO                = 'pro';
+	const PLAN_PREMIUM            = 'premium';
+	const PLAN_CUSTOM             = 'custom';
 
 	/**
 	 * @var AbstractProvider[]
@@ -81,6 +85,14 @@ final class Plugin {
 	 * @var Admin
 	 */
 	private $admin;
+	/**
+	 * @var array
+	 */
+	private $plans = [];
+	/**
+	 * @var string
+	 */
+	private $current_plan = self::PLAN_FREE;
 
 	/**
 	 * @param array $allowed_providers
@@ -100,6 +112,31 @@ final class Plugin {
 		$this->integrations[ self::INTEGRATION_FLUSH_CACHE ] = new Integrations\FlushCache\Integration();
 
 		$this->admin = new Admin();
+
+		$this->plans[ self::PLAN_FREE ] = new Plan( self::PLAN_FREE, __( 'Free', 'innstats' ) );
+		$this->plans[ self::PLAN_FREE ]->set_visible( false );
+		$this->plans[ self::PLAN_FREE ]->add_feature( Admin::PAGE_GENERAL );
+
+		$this->plans[ self::PLAN_PRO ] = new Plan( self::PLAN_PRO, __( 'Pro', 'innstats' ) );
+		$this->plans[ self::PLAN_PRO ]->add_feature( Admin::PAGE_GENERAL );
+		$this->plans[ self::PLAN_PRO ]->add_feature( Admin::PAGE_POPULAR_POSTS );
+		$this->plans[ self::PLAN_PRO ]->add_feature( Admin::PAGE_POPULAR_TERMS );
+		$this->plans[ self::PLAN_PRO ]->add_feature( Admin::PAGE_NOT_FOUND_PAGES );
+
+		$this->plans[ self::PLAN_PREMIUM ] = new Plan( self::PLAN_PREMIUM, __( 'Premium', 'innstats' ) );
+		$this->plans[ self::PLAN_PREMIUM ]->add_feature( Admin::PAGE_GENERAL );
+		$this->plans[ self::PLAN_PREMIUM ]->add_feature( Admin::PAGE_POPULAR_POSTS );
+		$this->plans[ self::PLAN_PREMIUM ]->add_feature( Admin::PAGE_POPULAR_TERMS );
+		$this->plans[ self::PLAN_PREMIUM ]->add_feature( Admin::PAGE_NOT_FOUND_PAGES );
+		$this->plans[ self::PLAN_PREMIUM ]->add_feature( Admin::PAGE_POPULAR_USERS );
+
+		$this->plans[ self::PLAN_CUSTOM ] = new Plan( self::PLAN_CUSTOM, __( 'Custom', 'innstats' ) );
+		$this->plans[ self::PLAN_CUSTOM ]->add_feature( Admin::PAGE_GENERAL );
+		$this->plans[ self::PLAN_CUSTOM ]->add_feature( Admin::PAGE_POPULAR_POSTS );
+		$this->plans[ self::PLAN_CUSTOM ]->add_feature( Admin::PAGE_POPULAR_TERMS );
+		$this->plans[ self::PLAN_CUSTOM ]->add_feature( Admin::PAGE_NOT_FOUND_PAGES );
+		$this->plans[ self::PLAN_CUSTOM ]->add_feature( Admin::PAGE_POPULAR_USERS );
+		$this->plans[ self::PLAN_CUSTOM ]->add_feature( Admin::PAGE_CONVERSIONS );
 	}
 
 	/**
@@ -145,6 +182,27 @@ final class Plugin {
 	}
 
 	/**
+	 * @return Plan[]
+	 */
+	public function get_plans(): array {
+		return $this->plans;
+	}
+
+	/**
+	 * @param string $plan
+	 */
+	public function set_current_plan( string $plan ) {
+		$this->current_plan = $plan;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_current_plan(): string {
+		return $this->current_plan;
+	}
+
+	/**
 	 * @param string $provider
 	 *
 	 * @return bool
@@ -173,7 +231,10 @@ final class Plugin {
 	 * @return bool
 	 */
 	public function should_track_queried_object(): bool {
-		return apply_filters( 'innstats_track_queried_object', true );
+		return apply_filters(
+			'innstats_track_queried_object',
+			in_array( $this->get_current_plan(), [ self::PLAN_PRO, self::PLAN_PREMIUM, self::PLAN_CUSTOM ], true )
+		);
 	}
 
 	/**
@@ -181,6 +242,31 @@ final class Plugin {
 	 */
 	public function should_track_auto_pageviews(): bool {
 		return apply_filters( 'innstats_track_auto_pageviews', false );
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function should_track_author(): bool {
+		return apply_filters(
+			'innstats_track_author',
+			in_array( $this->get_current_plan(), [ self::PLAN_PREMIUM, self::PLAN_CUSTOM ], true )
+		);
+	}
+
+	/**
+	 * @param string $feature
+	 *
+	 * @return Plan|null
+	 */
+	public function find_plan_by_feature( string $feature ): ?Plan {
+		foreach ( $this->get_plans() as $plan ) {
+			if ( $plan->has_feature( $feature ) ) {
+				return $plan;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -251,13 +337,14 @@ final class Plugin {
 
 		$data = [
 			'domain'               => $this->site_id(),
+			'plan'                 => $this->get_current_plan(),
 			'query_var'            => $this->get_query()->get_name(),
 			'track_auto_pageviews' => $this->should_track_auto_pageviews(),
 			'props'                => apply_filters( 'innstats_props', [] ),
 		];
 
 		if ( $this->should_track_queried_object() ) {
-			$data['queried_object'] = self::get_queried_object();
+			$data['queried_object'] = $this->get_queried_object();
 		}
 
 		if ( $this->should_track_ad_blocker() ) {
@@ -327,12 +414,16 @@ final class Plugin {
 	/**
 	 * @return array
 	 */
-	public static function get_queried_object(): array {
+	public function get_queried_object(): array {
 		$queried_object = [
 			'template' => 'index',
 			'type'     => '',
 			'id'       => 0,
 		];
+
+		if ( $this->should_track_author() ) {
+			$queried_object['author'] = 0;
+		}
 
 		foreach ( self::TEMPLATES as $template ) {
 			if ( call_user_func( "is_$template" ) ) {
@@ -348,8 +439,12 @@ final class Plugin {
 				) ) {
 					// Embed can be 404, avoid empty values.
 					if ( ! is_404() ) {
-						$queried_object['type'] = get_post_type();
-						$queried_object['id']   = get_the_ID();
+						$queried_object['type']   = get_post_type();
+						$queried_object['id']     = get_the_ID();
+
+						if ( $this->should_track_author() ) {
+							$queried_object['author'] = get_the_author_meta( 'ID' );
+						}
 					}
 				} elseif ( $template === self::TEMPLATE_POST_TYPE_ARCHIVE ) {
 					$post_type = get_query_var( 'post_type' );
@@ -420,7 +515,7 @@ final class Plugin {
 		}
 
 		if ( $this->should_track_queried_object() && $query->value() === 'queried_object' ) {
-			wp_send_json( self::get_queried_object(), WP_Http::OK );
+			wp_send_json( $this->get_queried_object(), WP_Http::OK );
 		}
 	}
 

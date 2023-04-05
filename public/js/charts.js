@@ -27,11 +27,35 @@
               return;
             }
 
-            const { url } = chart.data.datasets[0].data[active[0].index];
+            const { filterBy } = chart.data;
 
-            if (typeof url !== 'undefined' && url !== null) {
-              window.open(url, '_blank').focus();
+            if (typeof filterBy !== 'function') {
+              return;
             }
+
+            const datasetData = chart.data.datasets[0].data[active[0].index];
+
+            if (typeof datasetData !== 'object' || datasetData === null) {
+              return;
+            }
+
+            // Ignore clicks on the device pixel ratio, language and ad blocker properties
+            // See https://plausible.io/docs/stats-api#custom-props
+            if (
+              ['device_pixel_ratio', 'language', 'ad_blocker'].includes(
+                property
+              )
+            ) {
+              return;
+            }
+
+            const query = new URLSearchParams(window.location.search);
+
+            query.set(
+              property === 'page' ? 'event:page' : property,
+              filterBy(datasetData)
+            );
+            window.location.search = query.toString();
           },
         },
       };
@@ -58,15 +82,13 @@
               data: data.map((item) => ({
                 x: item.visitors,
                 y: item[property],
-                url: property.includes('page')
-                  ? `${innstats.home_url}${item[property]}`
-                  : null,
               })),
               barPercentage: 1,
               categoryPercentage: 1,
               minBarLength: 4,
             },
           ],
+          filterBy: ({ y }) => y,
         },
         options: {
           ...config.options,
@@ -135,6 +157,7 @@
               borderWidth: 1,
             },
           ],
+          filterBy: ({ x }) => x,
         },
         options: {
           ...config.options,
@@ -183,6 +206,7 @@
               })),
             },
           ],
+          filterBy: ({ key }) => key,
         },
       });
     },
@@ -200,10 +224,12 @@
               data: data.map((item) => ({
                 feature: item.feature,
                 value: item.visitors,
+                code: item.code,
               })),
               outline: data.map((item) => item.feature),
             },
           ],
+          filterBy: ({ code }) => code,
         },
         options: {
           ...config.options,

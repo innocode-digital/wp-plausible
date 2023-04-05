@@ -1,6 +1,70 @@
 (function (innstats, wp, ChartGeo, $) {
   wp.domReady(() => {
-    const { api, charts } = innstats;
+    const { api, charts, per_page: perPage } = innstats;
+    const filters = {
+      period: '7d',
+      startDate: null,
+      endDate: null,
+      filters: [],
+    };
+    const query = new URLSearchParams(window.location.search);
+
+    if (query.has('period')) {
+      const today = new Date().toISOString().split('T')[0];
+
+      switch (query.get('period')) {
+        case 'day':
+        case '7d':
+        case '30d':
+        case 'month':
+        case '6mo':
+        case '12mo':
+          filters.period = query.get('period');
+
+          break;
+        case 'custom':
+          filters.period = 'custom';
+          filters.startDate = query.get('start_date') || today;
+          filters.endDate = query.get('end_date') || today;
+
+          break;
+        default:
+          filters.period = 'custom';
+          filters.startDate = query.get('period');
+          filters.endDate = today;
+
+          break;
+      }
+    }
+
+    if (query.has('event:page')) {
+      filters.filters.push(`event:page==${query.get('event:page')}`);
+    }
+
+    [
+      'country',
+      'entry_page',
+      'exit_page',
+      'source',
+      'utm_medium',
+      'utm_source',
+      'utm_campaign',
+      'utm_term',
+      'utm_content',
+      'device',
+      'browser',
+      'os',
+    ].forEach((property) => {
+      if (query.has(property)) {
+        filters.filters.push(`visit:${property}==${query.get(property)}`);
+      }
+    });
+
+    ['device_pixel_ratio', 'language', 'ad_blocker'].forEach((property) => {
+      if (query.has(property)) {
+        filters.filters.push(`event:props:${property}==${query.get(property)}`);
+      }
+    });
 
     const number2human = (number = 0) =>
       new Intl.NumberFormat(document.documentElement.lang || 'en-US').format(
@@ -93,16 +157,23 @@
       misc.appendChild(realtimeVisitors);
       misc.appendChild(topCountries);
 
-      api.realtimeVisitors().then((data) => {
-        realtimeVisitors.innerHTML = `<span class="innstats-realtime-status innstats-realtime-status_online" aria-label="Online"></span> <span id="innstats-realtime-visitors">${data}</span> currently online`;
-        hideSpinner('misc');
-      });
+      api
+        .realtimeVisitors()
+        .send()
+        .then((data) => {
+          realtimeVisitors.innerHTML = `<span class="innstats-realtime-status innstats-realtime-status_online" aria-label="Online"></span> <span id="innstats-realtime-visitors">${data}</span> currently online`;
+          hideSpinner('misc');
+        });
 
       api
-        .aggregate({
-          metrics: ['visitors', 'pageviews', 'bounce_rate', 'visit_duration'],
-          compare: 'previous_period',
-        })
+        .aggregate()
+        .addMetric('pageviews')
+        .addMetric('bounce_rate')
+        .addMetric('visit_duration')
+        .withPreviousPeriod()
+        .byTimePeriod(filters.period, filters.startDate, filters.endDate)
+        .useFilters(filters.filters)
+        .send()
         .then((data) => {
           [
             ['visitors', 'Unique visitors'],
@@ -139,9 +210,13 @@
         });
 
       api
-        .timeseries({
-          metrics: ['visitors', 'pageviews', 'bounce_rate', 'visit_duration'],
-        })
+        .timeseries()
+        .addMetric('pageviews')
+        .addMetric('bounce_rate')
+        .addMetric('visit_duration')
+        .byTimePeriod(filters.period, filters.startDate, filters.endDate)
+        .useFilters(filters.filters)
+        .send()
         .then((data) => {
           charts.lines(
             data.map((item) => ({
@@ -190,7 +265,12 @@
         fetch(
           'https://cdn.jsdelivr.net/npm/i18n-iso-countries@7.5.0/codes.json'
         ).then((response) => response.json()),
-        api.visit('country', { limit: 100 }),
+        api
+          .breakdownByVisit('country')
+          .byTimePeriod(filters.period, filters.startDate, filters.endDate)
+          .useFilters(filters.filters)
+          .limitResults(100)
+          .send(),
       ]).then(([countries, codes, data]) => {
         const features = ChartGeo.topojson
           .feature(countries, countries.objects.countries)
@@ -207,6 +287,7 @@
                 feature.id ===
                 codes.find(([code]) => code === item.country)?.[2]
             )?.visitors,
+            code: codes.find(([, , id]) => id === feature.id)?.[0],
           })),
           'country',
           'Countries'
@@ -241,10 +322,16 @@
     observe('top_pages', () => {
       showSpinners('top_pages');
 
-      api.event('page').then((data) => {
-        charts.horizontalBar(data, 'page', 'Popular');
-        hideSpinner('page');
-      });
+      api
+        .breakdownByEvent('page')
+        .byTimePeriod(filters.period, filters.startDate, filters.endDate)
+        .useFilters(filters.filters)
+        .limitResults(perPage)
+        .send()
+        .then((data) => {
+          charts.horizontalBar(data, 'page', 'Popular');
+          hideSpinner('page');
+        });
 
       const horizontalBars = {
         entry_page: 'Entry Pages',
@@ -252,10 +339,16 @@
       };
 
       Object.keys(horizontalBars).forEach((key) => {
-        api.visit(key).then((data) => {
-          charts.horizontalBar(data, key, horizontalBars[key]);
-          hideSpinner(key);
-        });
+        api
+          .breakdownByVisit(key)
+          .byTimePeriod(filters.period, filters.startDate, filters.endDate)
+          .useFilters(filters.filters)
+          .limitResults(perPage)
+          .send()
+          .then((data) => {
+            charts.horizontalBar(data, key, horizontalBars[key]);
+            hideSpinner(key);
+          });
       });
     });
 
@@ -272,10 +365,20 @@
       };
 
       Object.keys(horizontalBars).forEach((key) => {
-        api.visit(key).then((data) => {
-          charts.horizontalBar(data, key, horizontalBars[key]);
-          hideSpinner(key);
-        });
+        api
+          .breakdownByVisit(key)
+          .byTimePeriod(filters.period, filters.startDate, filters.endDate)
+          .useFilters(filters.filters)
+          .limitResults(perPage + 1)
+          .send()
+          .then((data) => {
+            charts.horizontalBar(
+              data.filter((item) => item[key] !== 'Direct / None').slice(0, 10),
+              key,
+              horizontalBars[key]
+            );
+            hideSpinner(key);
+          });
       });
     });
 
@@ -286,57 +389,117 @@
         device: 'Devices',
         browser: 'Browsers',
         os: 'Operating Systems',
-        language: 'Languages',
       };
 
       Object.keys(pies).forEach((key) => {
-        const deferred = ['device', 'browser', 'os'].includes(key)
-          ? api.visit(key)
-          : api.custom(key);
-
-        deferred.then((data) => {
-          charts.pie(data, key, pies[key]);
-          hideSpinner(key);
-        });
-      });
-
-      api.custom('device_pixel_ratio').then((data) => {
-        const sorted = data.sort(
-          (a, b) => a.device_pixel_ratio - b.device_pixel_ratio
-        );
-
-        charts.bar(
-          sorted,
-          'device_pixel_ratio',
-          'Retina',
-          'Device Pixel Ratio'
-        );
-        hideSpinner('device_pixel_ratio');
+        api
+          .breakdownByVisit(key)
+          .byTimePeriod(filters.period, filters.startDate, filters.endDate)
+          .useFilters(filters.filters)
+          .limitResults(perPage)
+          .send()
+          .then((data) => {
+            charts.pie(data, key, pies[key]);
+            hideSpinner(key);
+          });
       });
 
       api
-        .custom('ad_blocker', {
-          limit: 2, // Only 'yes' and 'no'
-        })
+        .breakdownByProp('language')
+        .byTimePeriod(filters.period, filters.startDate, filters.endDate)
+        .useFilters(filters.filters)
+        .limitResults(perPage)
+        .send()
         .then((data) => {
-          charts.bar(data.reverse(), 'ad_blocker', 'Ad Blocker');
+          charts.pie(
+            data.map((item) => {
+              const {
+                props: { language },
+              } = item;
+              const languageNames = new Intl.DisplayNames(
+                [document.documentElement.lang || 'en-US'],
+                { type: 'language' }
+              );
+
+              return {
+                ...item,
+                language: `${languageNames.of(language)} (${language})`,
+              };
+            }),
+            'language',
+            'Languages'
+          );
+          hideSpinner('language');
+        });
+
+      api
+        .breakdownByProp('device_pixel_ratio')
+        .byTimePeriod(filters.period, filters.startDate, filters.endDate)
+        .useFilters(filters.filters)
+        .limitResults(perPage)
+        .send()
+        .then((data) => {
+          const sorted = data
+            .map((item) => ({
+              ...item,
+              device_pixel_ratio: item.props.device_pixel_ratio,
+            }))
+            .sort((a, b) => a.device_pixel_ratio - b.device_pixel_ratio);
+
+          charts.bar(
+            sorted,
+            'device_pixel_ratio',
+            'Retina',
+            'Device Pixel Ratio'
+          );
+          hideSpinner('device_pixel_ratio');
+        });
+
+      api
+        .breakdownByProp('ad_blocker')
+        .byTimePeriod(filters.period, filters.startDate, filters.endDate)
+        .useFilters(filters.filters)
+        .limitResults(2) // Only 'yes' and 'no'
+        .send()
+        .then((data) => {
+          charts.bar(
+            data
+              .map((item) => ({
+                ...item,
+                ad_blocker: item.props.ad_blocker === 'yes' ? 'Yes' : 'No',
+              }))
+              .reverse(),
+            'ad_blocker',
+            'Ad Blocker'
+          );
           hideSpinner('ad_blocker');
         });
     });
 
     if ($) {
       $(document).on('heartbeat-send', () => {
-        api.realtimeVisitors().then((data) => {
-          const el = document.getElementById('innstats-realtime-visitors');
-
-          el.innerHTML = data;
-        });
+        if (document.visibilityState === 'hidden') {
+          return;
+        }
 
         api
-          .aggregate({
-            metrics: ['visitors', 'pageviews', 'bounce_rate', 'visit_duration'],
-            compare: 'previous_period',
-          })
+          .realtimeVisitors()
+          .send()
+          .then((data) => {
+            const el = document.getElementById('innstats-realtime-visitors');
+
+            el.innerHTML = data;
+          });
+
+        api
+          .aggregate()
+          .addMetric('pageviews')
+          .addMetric('bounce_rate')
+          .addMetric('visit_duration')
+          .withPreviousPeriod()
+          .byTimePeriod(filters.period, filters.startDate, filters.endDate)
+          .useFilters(filters.filters)
+          .send()
           .then((data) => {
             Object.keys(data).forEach((key) => {
               const { value, change } = data[key];
@@ -366,5 +529,16 @@
           });
       });
     }
+
+    document.querySelectorAll('.innstats-filter__button').forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        const form = button.closest('form');
+
+        button.parentNode.remove();
+        form.submit();
+      });
+    });
   });
 })(window.innstats, window.wp, window.ChartGeo, window.jQuery);
