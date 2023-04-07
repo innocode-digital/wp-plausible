@@ -93,10 +93,10 @@
 
     if (queriedObject) {
       pushQueriedObject(queriedObject, referrer, props);
-    }
 
-    if (utils.has(queriedObject, 'author') && queriedObject.author) {
-      pushAuthor(queriedObject.author, referrer, props);
+      if (utils.has(queriedObject, 'author') && queriedObject.author) {
+        pushAuthor(queriedObject.author, referrer, props);
+      }
     }
   };
 

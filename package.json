@@ -1,6 +1,6 @@
 {
   "name": "innstats",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Collects statistics through Plausible and shows analytics in admin panel. Also, provides API for developers to retrieve data.",
   "main": "index.js",
   "scripts": {

@@ -1,6 +1,6 @@
 {
   "name": "wp-digital/innstats",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "wordpress-muplugin",
   "description": "Collects statistics through Plausible and shows analytics in admin panel. Also, provides API for developers to retrieve data.",
   "license": "GPL-2.0+",
