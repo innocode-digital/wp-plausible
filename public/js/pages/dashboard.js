@@ -135,18 +135,30 @@
       observer.observe(el);
     };
 
+    const realtimeVisitors = document.createElement('div');
+
+    realtimeVisitors.classList.add(
+      'innstats-widget',
+      'innstats-widget_realtime-visitors'
+    );
+
+    document.getElementById('innstats-header').appendChild(realtimeVisitors);
+
+    api
+      .realtimeVisitors()
+      .send()
+      .then((data) => {
+        realtimeVisitors.innerHTML = `<span class="innstats-realtime-status innstats-realtime-status_online" aria-label="Online"></span> <span id="innstats-realtime-visitors">${data}</span> currently online`;
+        hideSpinner('misc');
+      });
+
     observe('general', () => {
       showSpinners('general');
 
       const misc = document.getElementById('innstats-widget-misc');
-      const realtimeVisitors = document.createElement('div');
       const aggregate = document.createElement('dl');
       const topCountries = document.createElement('div');
 
-      realtimeVisitors.classList.add(
-        'innstats-widget',
-        'innstats-widget_realtime-visitors'
-      );
       aggregate.classList.add('innstats-widget', 'innstats-widget_aggregate');
       topCountries.classList.add(
         'innstats-widget',
@@ -154,16 +166,7 @@
       );
 
       misc.appendChild(aggregate);
-      misc.appendChild(realtimeVisitors);
       misc.appendChild(topCountries);
-
-      api
-        .realtimeVisitors()
-        .send()
-        .then((data) => {
-          realtimeVisitors.innerHTML = `<span class="innstats-realtime-status innstats-realtime-status_online" aria-label="Online"></span> <span id="innstats-realtime-visitors">${data}</span> currently online`;
-          hideSpinner('misc');
-        });
 
       api
         .aggregate()
