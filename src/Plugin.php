@@ -531,7 +531,7 @@ final class Plugin {
 		foreach ( $tabs as $tab ) {
 			list( $tab, $post_type ) = $tab;
 
-			if ( $post_type !== 'attachment' ) {
+			if ( $post_type->name !== 'attachment' ) {
 				$filtered_tabs[] = [ $tab, $post_type ];
 			}
 		}
