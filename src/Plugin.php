@@ -286,6 +286,8 @@ final class Plugin {
 		add_action( 'wp_head', [ $this, 'enqueue_scripts' ], 2 );
 		add_action( 'embed_head', [ $this, 'enqueue_scripts' ], 2 );
 
+		add_filter( 'innstats_popular_post_types', [ $this, 'filter_popular_post_types' ] );
+
 		if ( is_admin() ) {
 			$this->get_admin()->run();
 		}
@@ -517,6 +519,24 @@ final class Plugin {
 		if ( $this->should_track_queried_object() && $query->value() === 'queried_object' ) {
 			wp_send_json( $this->get_queried_object(), WP_Http::OK );
 		}
+	}
+
+	/**
+	 * @param array $tabs
+	 * @return array
+	 */
+	public function filter_popular_post_types( array $tabs ): array {
+		$filtered_tabs = [];
+
+		foreach ( $tabs as $tab ) {
+			list( $tab, $post_type ) = $tab;
+
+			if ( $post_type !== 'attachment' ) {
+				$filtered_tabs[] = $tab;
+			}
+		}
+
+		return $filtered_tabs;
 	}
 
 	/**
