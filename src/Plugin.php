@@ -441,8 +441,8 @@ final class Plugin {
 				) ) {
 					// Embed can be 404, avoid empty values.
 					if ( ! is_404() ) {
-						$queried_object['type']   = get_post_type();
-						$queried_object['id']     = get_the_ID();
+						$queried_object['type'] = get_post_type();
+						$queried_object['id']   = get_the_ID();
 
 						if ( $this->should_track_author() ) {
 							$queried_object['author'] = get_the_author_meta( 'ID' );
@@ -532,7 +532,7 @@ final class Plugin {
 			list( $tab, $post_type ) = $tab;
 
 			if ( $post_type !== 'attachment' ) {
-				$filtered_tabs[] = $tab;
+				$filtered_tabs[] = [ $tab, $post_type ];
 			}
 		}
 
