@@ -9,8 +9,10 @@
   'use strict';
 
   var utils = innstats.utils;
+  var timer;
 
   var pushEvent = function (name, referrer, props) {
+    var url = utils.url('plausible', '/api/event');
     var payload = {
       domain: innstats.domain || 'Unknown',
       name: name,
@@ -30,11 +32,12 @@
             ? window.devicePixelRatio
             : 0,
         language:
-          typeof navigator.language !== 'undefined' ? navigator.language : '',
+          typeof navigator.language !== 'undefined' ? navigator.language : '' // eslint-disable-line prettier/prettier
       } // eslint-disable-line prettier/prettier
     };
     var prop;
     var request;
+    var data;
 
     if (utils.has(innstats, 'ad_blocker')) {
       payload.props.ad_blocker = innstats.ad_blocker ? 'yes' : 'no';
@@ -56,10 +59,18 @@
       }
     }
 
+    data = JSON.stringify(payload);
+
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(url, data);
+
+      return;
+    }
+
     request = utils.xhr();
-    request.open('POST', utils.url('plausible', '/api/event'), true);
+    request.open('POST', url, true);
     request.setRequestHeader('Content-Type', 'application/json');
-    request.send(JSON.stringify(payload));
+    request.send(data);
   };
 
   var pushQueriedObject = function (queriedObject, referrer, props) {
@@ -91,13 +102,22 @@
   var pageview = function (referrer, queriedObject, props) {
     pushEvent('pageview', referrer, props);
 
-    if (queriedObject) {
-      pushQueriedObject(queriedObject, referrer, props);
-
-      if (utils.has(queriedObject, 'author') && queriedObject.author) {
-        pushAuthor(queriedObject.author, referrer, props);
-      }
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
     }
+
+    timer = setTimeout(function () {
+      if (queriedObject) {
+        pushQueriedObject(queriedObject, referrer, props);
+
+        if (utils.has(queriedObject, 'author') && queriedObject.author) {
+          pushAuthor(queriedObject.author, referrer, props);
+        }
+      }
+
+      timer = null;
+    }, 15 * 1000); // Let's wait 15 seconds before sending the queried object and avoid unreal bounce rates.
   };
 
   innstats.providers.plausible.pushEvent = pushEvent;

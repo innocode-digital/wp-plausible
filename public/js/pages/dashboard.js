@@ -199,11 +199,12 @@
                 : number2human(value)
             }</span>`;
             const unit = key === 'bounce_rate' ? '%' : '';
-            const displayChange = change
-              ? ` <span id="innstats-${key}-change" class="innstats-badge innstats-badge_${
-                  change < 0 ? 'danger' : 'success'
-                }">${change}%</span>`
-              : '';
+            const displayChange =
+              change && key !== 'bounce_rate'
+                ? ` <span id="innstats-${key}-change" class="innstats-badge innstats-badge_${
+                    change < 0 ? 'danger' : 'success'
+                  }">${change}%</span>`
+                : '';
 
             dd.innerHTML = `${display}${unit}${displayChange}`;
             aggregate.appendChild(dd);

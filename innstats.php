@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Innstats
  * Description: Collects statistics through Plausible and shows analytics in admin panel. Also, provides API for developers to retrieve data.
- * Version: 1.1.3
+ * Version: 1.2.0
  * Author: SMFB Dinamo
  * Author URI: https://www.smfb-dinamo.com/
  * Tested up to: 6.2
@@ -17,7 +17,7 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 use WPD\Statistics;
 
 define( 'INNSTATS_FILE', __FILE__ );
-define( 'INNSTATS_VERSION', '1.1.3' );
+define( 'INNSTATS_VERSION', '1.2.0' );
 
 $GLOBALS['innstats'] = new Statistics\Plugin(
 	[
